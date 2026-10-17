@@ -1,6 +1,6 @@
 # claude-config
 
-Configuración genérica de Claude Code para gastar menos tokens: `opusplan`, RTK, CodeGraph, headroom, caveman/ponytail, agentes `implementador` (sonnet) y `mecanico` (haiku), y reglas en `CLAUDE.md`. Sin nada de ninguna empresa.
+Configuración genérica de Claude Code para gastar menos tokens: `opusplan`, RTK, CodeGraph, headroom, caveman/ponytail, agentes `implementador` (sonnet), `mecanico` (haiku) y `experto` (opus), y reglas en `CLAUDE.md`. Sin nada de ninguna empresa.
 
 ```bash
 git clone https://github.com/criisspl/claude-config.git ~/projects/claude-config

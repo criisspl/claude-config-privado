@@ -11,6 +11,7 @@
   - Opus (yo): planificar, decidir enfoque, depurar cosas raras, revisar cambios críticos.
   - Sonnet → agente `implementador`: escribir código con un plan ya acordado.
   - Haiku → agente `mecanico`: tareas mecánicas, resúmenes, buscar datos.
+  - Opus → agente `experto`: si el hilo va en Sonnet y surge un bug raro, un error que no sale a la primera o una revisión crítica.
 - Tarea nueva con la conversación ya cargada de otra cosa: pedir `/clear` antes de empezar (no puedo ejecutarlo yo). Si es la misma tarea y pasa de ~100k tokens, sugerir `/compact`.
 - Para entender o localizar código, CodeGraph primero (si hay `.codegraph/`); leer ficheros grandes con `offset`/`limit` y no releer lo ya leído.
 
