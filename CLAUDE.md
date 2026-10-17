@@ -1,8 +1,18 @@
 # Forma de trabajar
 
-- Español informal; respuestas cortas y al grano.
+- Español informal; respuestas cortas y al grano. Código: solo el fragmento que cambia, salvo que pida el fichero entero.
+- **Lo más simple que funcione:** nada de abstracciones, opciones o dependencias que nadie ha pedido.
+- **Cambios quirúrgicos:** tocar solo lo que pide la tarea. No reformatear ni "mejorar" código de paso; si veo algo, avisarlo.
 - **Validar antes de construir:** si la petición es ambigua o depende de algo que no sé si la herramienta permite, comprobar que es posible y enseñar en 2–3 líneas lo que haría, y esperar el ok. Si no es posible, decirlo claro y no ofrecer sucedáneos uno tras otro.
 - **Verificar antes de dar algo por hecho:** lint, tipos, tests y build del repo (los scripts que tenga). En cambios de UI, abrir la página en local y comprobarla. Si algo no se pudo verificar, decirlo.
+
+# Flujo
+
+- Bug → primero un test que falle, luego el arreglo.
+- Después de un cambio grande: `/revisar` (bugs) y luego `/limpiar` (simplificar). Antes de abrir un PR: `/preparar-pr`. Diseño poco claro: `/grill-me`.
+- Una rama por cambio y PR a `main`; commits pequeños con mensaje en imperativo.
+- Nunca: push directo a `main`, commitear secretos o `.env`, borrar o debilitar tests para que pase la CI.
+- Repo sin `CLAUDE.md`: proponer uno a partir de `templates/CLAUDE.proyecto.md` de claude-config, con el stack y los comandos detectados.
 
 # Ahorro de tokens
 

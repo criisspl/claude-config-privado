@@ -6,7 +6,7 @@ set -euo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CFG="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 STAMP="$(date +%Y%m%d%H%M%S)"
-mkdir -p "$CFG/agents"
+mkdir -p "$CFG/agents" "$CFG/skills"
 echo "→ Configuración en $CFG"
 
 have() { command -v "$1" >/dev/null 2>&1; }
@@ -34,6 +34,7 @@ link() {
 link "$REPO/CLAUDE.md" "$CFG/CLAUDE.md"
 link "$REPO/RTK.md" "$CFG/RTK.md"
 for f in "$REPO"/agents/*.md; do link "$f" "$CFG/agents/$(basename "$f")"; done
+for d in "$REPO"/skills/*/; do d="${d%/}"; link "$d" "$CFG/skills/$(basename "$d")"; done
 
 # 3. settings.json: fusiona sin pisar lo que ya haya
 [ -f "$CFG/settings.json" ] && cp "$CFG/settings.json" "$CFG/settings.json.bak-$STAMP"
