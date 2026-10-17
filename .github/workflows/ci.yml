@@ -1,0 +1,17 @@
+name: Comprobaciones
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  comprobaciones:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: shellcheck install.sh tests/check.sh
+      - run: bash tests/check.sh
