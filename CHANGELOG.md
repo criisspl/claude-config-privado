@@ -6,6 +6,11 @@ Cada versión publicada tiene su sección `## X.Y.Z`. Al subir `VERSION` en `mai
 - **Menor** (1.1.0): paquetes o skills nuevos, reglas nuevas.
 - **Parche** (1.0.1): correcciones de texto o de errores.
 
+## 1.0.1
+
+- `init`/`update` añaden `.claude/` al `.prettierignore` del proyecto (si lo tiene): lo instalado lo gestiona claude-config y el formateador del proyecto no debe reescribirlo.
+- El bloque del `CLAUDE.md` lleva las líneas en blanco que pide prettier.
+
 ## 1.0.0
 
 - Comando `claude-config` (`init`, `add`, `remove`, `update`, `status`, `list`, `version`) para instalar en cada proyecto los paquetes de su tecnología.
