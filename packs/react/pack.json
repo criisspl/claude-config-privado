@@ -1,0 +1,1 @@
+{"nombre": "react", "descripcion": "React 19: Actions, useActionState, ref como prop, compilador y effects solo para sistemas externos.", "detecta": [{"npm": "react"}], "requiere": []}

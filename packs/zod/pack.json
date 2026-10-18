@@ -1,0 +1,1 @@
+{"nombre": "zod", "descripcion": "Validación con Zod 4: formatos top-level, error en vez de message y safeParse en entradas externas.", "detecta": [{"npm": "zod"}], "requiere": []}

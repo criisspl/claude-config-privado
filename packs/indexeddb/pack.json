@@ -1,0 +1,1 @@
+{"nombre": "indexeddb", "descripcion": "Versiones de esquema, transacciones y persistencia para IndexedDB (Dexie, idb o API nativa).", "detecta": [{"npm": "dexie"}, {"npm": "idb"}, {"npm": "fake-indexeddb"}], "requiere": []}

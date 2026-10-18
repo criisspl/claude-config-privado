@@ -1,0 +1,5 @@
+- Cada cambio de esquema es una versión nueva (`db.version(n+1).stores(...)`), con `.upgrade()` si hay que migrar datos. Una versión con `upgrade` ya publicada no se edita nunca.
+- Dentro de una transacción no hagas `await` de nada ajeno a IndexedDB (`fetch`, `setTimeout`, crypto...): se auto-confirma. Haz primero lo asíncrono y abre la transacción después.
+- Safari borra el almacenamiento tras 7 días de uso sin interacción con el sitio (salvo apps instaladas en pantalla de inicio): pide `navigator.storage.persist()` y ofrece copia de seguridad exportable.
+- Tests con `fake-indexeddb` (importando `fake-indexeddb/auto`), con una base nueva por test.
+- UI reactiva con Dexie: `liveQuery()`, no recargas a mano.

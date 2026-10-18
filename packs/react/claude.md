@@ -1,0 +1,5 @@
+- React 19: `ref` es una prop normal en componentes de función; no uses `forwardRef` en código nuevo. Usa `<Context value={...}>` en vez de `<Context.Provider>`.
+- Formularios: `<form action={fn}>` con `useActionState` (`[state, formAction, isPending]`; la acción recibe `(prevState, formData)`). Errores esperados se devuelven como estado, no se lanzan. `useFormStatus` se importa de `react-dom`.
+- No uses `useEffect` para derivar estado ni para reaccionar a clics: calcula en el render o usa el event handler. Effects solo para sincronizar con sistemas externos (red, DOM no-React, suscripciones), siempre con cleanup.
+- No añadas `useMemo`/`useCallback`/`React.memo` por defecto; solo si el proyecto no usa React Compiler y hay un problema de rendimiento medido, o necesitas una referencia estable concreta.
+- `key` estable y única por dato (id); nunca el índice en listas que se reordenan o editan. Para resetear el estado de un subárbol, cambia su `key`.

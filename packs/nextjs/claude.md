@@ -1,0 +1,6 @@
+- Antes de escribir código de Next.js, lee la guía de `node_modules/next/dist/docs/` (lo pide el `AGENTS.md` que genera Next): esta versión rompe cosas respecto a tu memoria. Haz caso a los avisos de deprecación.
+- App Router y Server Components por defecto; `"use client"` solo en el componente hoja que necesita estado, efectos o APIs del navegador, nunca en páginas o layouts enteros.
+- En la 16 `params`, `searchParams`, `cookies()`, `headers()` y `draftMode()` son asíncronos: siempre `await`. Para tiparlos usa `PageProps<'/ruta'>`, `LayoutProps` y `RouteContext` (se generan con `next typegen`).
+- Server Actions y Route Handlers son endpoints públicos: valida la entrada en el servidor y comprueba autenticación y autorización dentro de cada uno (el chequeo de la página no vale).
+- Solo `NEXT_PUBLIC_*` llega al navegador y se inlinea en el build: nunca secretos ahí. Código solo de servidor, con `import 'server-only'`.
+- `middleware.ts` ya no existe: es `proxy.ts` con `export function proxy`. `revalidateTag` exige un segundo argumento (`revalidateTag('x', 'max')`); `updateTag` solo en Server Actions. No uses `next lint`.

@@ -1,0 +1,1 @@
+{"nombre": "cloudflare-workers", "descripcion": "Secretos, bindings tipados, assets y límites para Workers con wrangler 4.", "detecta": [{"npm": "wrangler"}, {"fichero": "wrangler.jsonc"}, {"fichero": "wrangler.toml"}], "requiere": []}

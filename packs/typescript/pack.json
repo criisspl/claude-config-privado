@@ -1,0 +1,1 @@
+{"nombre": "typescript", "descripcion": "TypeScript estricto: sin any, import type, satisfies y extensiones .ts explícitas.", "detecta": [{"npm": "typescript"}, {"fichero": "tsconfig.json"}], "requiere": []}

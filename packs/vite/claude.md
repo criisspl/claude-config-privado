@@ -1,0 +1,5 @@
+- Solo las variables `VITE_*` llegan al cliente y quedan incrustadas en el bundle: son públicas. Nunca pongas claves, tokens ni secretos en ellas; van en un backend/función serverless.
+- Se leen con `import.meta.env.VITE_X` (no `process.env`) y son siempre strings; convierte booleanos y números a mano. Tipa las nuevas en `src/vite-env.d.ts` extendiendo `ImportMetaEnv`, sin `import` en ese fichero.
+- La config vive en `vite.config.ts` con `defineConfig`. En Vite 8 `build.rollupOptions` pasó a `build.rolldownOptions` y `esbuild` a `oxc`; mira la versión instalada antes de tocarlas.
+- `vite preview` solo sirve el build local para comprobarlo (ejecuta antes `vite build`); no es un servidor de producción.
+- Los ficheros `.env*.local` van en `.gitignore`; tras cambiar un `.env` hay que reiniciar el dev server.
