@@ -1,0 +1,1 @@
+{"nombre": "tailwind", "descripcion": "Tailwind CSS 4: configuración CSS-first con @theme, plugin de Vite y clases renombradas respecto a la v3.", "detecta": [{"npm": "tailwindcss"}], "requiere": []}

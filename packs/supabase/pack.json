@@ -1,0 +1,1 @@
+{"nombre": "supabase", "descripcion": "Reglas de RLS, claves, migraciones y tipos para proyectos con Supabase (supabase-js v2).", "detecta": [{"npm": "@supabase/supabase-js"}, {"fichero": "supabase/migrations"}], "requiere": []}

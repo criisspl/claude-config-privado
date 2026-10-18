@@ -37,6 +37,11 @@ link "$REPO/CLAUDE.md" "$CFG/CLAUDE.md"
 link "$REPO/RTK.md" "$CFG/RTK.md"
 for f in "$REPO"/agents/*.md; do link "$f" "$CFG/agents/$(basename "$f")"; done
 for d in "$REPO"/skills/*/; do d="${d%/}"; link "$d" "$CFG/skills/$(basename "$d")"; done
+# Comando claude-config (paquetes por proyecto)
+BIN="${CLAUDE_CONFIG_BIN:-$HOME/.local/bin}"
+mkdir -p "$BIN"
+link "$REPO/bin/claude-config.mjs" "$BIN/claude-config"
+case ":$PATH:" in *":$BIN:"*) ;; *) echo "⚠ Añade $BIN a tu PATH para usar el comando claude-config" ;; esac
 # Enlaces a cosas que ya no están en el repo (p. ej. skills retiradas)
 for l in "$CFG"/skills/* "$CFG"/agents/*; do
   if [ -L "$l" ] && [ ! -e "$l" ]; then

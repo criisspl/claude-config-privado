@@ -1,0 +1,5 @@
+- Localiza por lo que ve el usuario: `page.getByRole('button', { name: ... })`, `getByLabel`, `getByText`; `getByTestId` si no hay otra. Nada de selectores CSS/XPath frágiles.
+- Aserciones web-first con auto-wait: `await expect(locator).toBeVisible()`. No uses `expect(await locator.isVisible())` ni `waitForTimeout`.
+- Cada test es independiente: su propio estado, sin depender del orden ni de datos de otro test.
+- No dependas de servicios externos: intercepta con `page.route` y responde con datos inventados.
+- Un fallo se depura con `npx playwright test --debug` o el trace (`--trace on`), no añadiendo esperas.

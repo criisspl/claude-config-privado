@@ -1,0 +1,5 @@
+- Svelte 5 con runas, nada de sintaxis de Svelte 4 en código nuevo: `$state`, `$derived`, `$effect`, `$props`, `$bindable`; ni `export let`, ni `$:`, ni `<slot>`, ni `on:click`, ni `createEventDispatcher`.
+- Estado derivado con `$derived` / `$derived.by`, nunca sincronizado con `$effect`. `$effect` es solo para salir de Svelte (DOM externo, librerías, red) y devuelve su limpieza.
+- Eventos como atributos (`onclick={...}`) y comunicación hijo→padre con props de callback; contenido con snippets (`{#snippet}` / `{@render children?.()}`), no slots.
+- Estado compartido entre ficheros en `.svelte.ts`: no exportes un `$state` que se reasigna; exporta un objeto y muta sus propiedades, o expón getters/setters.
+- Componentes con `<script lang="ts">`, props tipadas con `interface Props` y `$props()`. Montar desde JS con `mount(App, { target, props })` (y `unmount`), nunca `new App()`.

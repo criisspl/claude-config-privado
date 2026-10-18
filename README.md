@@ -1,8 +1,13 @@
 # claude-config
 
-Configuración genérica de Claude Code para gastar menos tokens: `opusplan`, RTK, CodeGraph, headroom, caveman/ponytail, agentes `implementador` (sonnet), `mecanico` (haiku) y `experto` (opus), skills `grill-me` y `preparar-pr` (para revisar y limpiar se usan `/code-review` y `/simplify`, que vienen de serie), y reglas en `CLAUDE.md`. Sin nada de ninguna empresa.
+Librería de configuración de Claude Code, con versiones. Dos partes:
 
-Para un repo nuevo: copia `templates/CLAUDE.proyecto.md` como `CLAUDE.md` y pide a Claude que rellene el stack.
+- **Global** (`install.sh`, una vez por máquina): reglas en `CLAUDE.md` para gastar menos tokens (`opusplan`, RTK, CodeGraph, headroom, caveman/ponytail), agentes `implementador` (sonnet), `mecanico` (haiku) y `experto` (opus), skills `grill-me` y `preparar-pr` (para revisar y limpiar se usan `/code-review` y `/simplify`, que vienen de serie), permisos y extras opcionales.
+- **Por proyecto** (comando `claude-config`): detecta la tecnología del proyecto e instala en su `.claude/` los paquetes que le tocan, con reglas, skills y agentes; `claude-config update` lo pone al día con la última versión.
+
+Sin nada de ninguna empresa.
+
+## Instalar
 
 ```bash
 git clone https://github.com/criisspl/claude-config.git ~/projects/claude-config
@@ -11,6 +16,20 @@ CLAUDE_CONFIG_DIR=~/.claude-personal ~/projects/claude-config/install.sh   # en 
 ```
 
 `CLAUDE.md`, `RTK.md`, los agentes y las skills quedan enlazados al repo: un `git pull` los actualiza. `settings.json` se fusiona (con copia de seguridad) e incluye permisos para comandos de solo lectura, tests, lint y build, sin pedir confirmación; `git push` pregunta y `git push --force` y leer `.env` están bloqueados.
+
+## Paquetes por proyecto
+
+```bash
+cd ~/projects/gestor-finanzas
+claude-config init      # detecta: react, supabase, typescript, vite, vitest → los instala
+claude-config update    # más adelante: baja la última versión y actualiza
+```
+
+Paquetes disponibles: `typescript`, `zod`, `vitest`, `playwright`, `react`, `vite`, `tailwind`, `nextjs`, `svelte`, `supabase`, `cloudflare-workers` e `indexeddb`. Cómo funcionan, todos los comandos y cómo crear uno nuevo (Java, Go, Python, PHP…): [`docs/paquetes.md`](docs/paquetes.md).
+
+## Versiones
+
+`VERSION` + [`CHANGELOG.md`](CHANGELOG.md). Al llegar a `main` un `VERSION` nuevo, una Action crea el tag `vX.Y.Z` y la release. `claude-config update` usa siempre la última release.
 
 ## Extras opcionales
 

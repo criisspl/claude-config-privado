@@ -1,0 +1,1 @@
+{"nombre": "svelte", "descripcion": "Svelte 5 con runas, snippets y TypeScript (Vite, sin SvelteKit).", "detecta": [{"npm": "svelte"}], "requiere": []}

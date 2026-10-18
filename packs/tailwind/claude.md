@@ -1,0 +1,5 @@
+- Tailwind 4 es CSS-first: el CSS empieza con `@import "tailwindcss";` (no `@tailwind base/components/utilities`) y el tema se define con `@theme { --color-brand: ...; }`. No crees `tailwind.config.js`; si existe, se carga con `@config`.
+- Con Vite usa `@tailwindcss/vite` en `plugins`; con PostCSS, `@tailwindcss/postcss` (sin `postcss-import` ni `autoprefixer`).
+- Clases renombradas: `shadow-sm`→`shadow-xs`, `shadow`→`shadow-sm`, igual con `blur`, `rounded` y `drop-shadow`; `outline-none`→`outline-hidden`; `ring`→`ring-3`; `flex-shrink-*`/`flex-grow-*`→`shrink-*`/`grow-*`.
+- Opacidad con modificador (`bg-black/50`), no `bg-opacity-*`. Variables CSS en valores arbitrarios con paréntesis: `bg-(--brand)`. El `!` de important va al final: `flex!`.
+- El borde por defecto ahora es `currentColor`: pon siempre color explícito (`border-gray-200`). Utilidades propias con `@utility`, no con `@layer utilities`.

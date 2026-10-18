@@ -1,0 +1,1 @@
+{"nombre": "playwright", "descripcion": "E2E con Playwright Test: locators por rol, aserciones con auto-wait y cero esperas fijas.", "detecta": [{"npm": "@playwright/test"}], "requiere": []}

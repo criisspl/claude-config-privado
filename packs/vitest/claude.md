@@ -1,0 +1,4 @@
+- Es Vitest, no Jest: `vi.fn`, `vi.spyOn`, `vi.mock`, nunca `jest.*`. Importa `describe/it/expect/vi` de `vitest` salvo que `globals` esté activo.
+- `vi.mock` se hoistea encima de los imports: si la factory necesita variables externas, créalas con `vi.hoisted`.
+- Restaura lo que toques: `vi.useRealTimers()` tras `vi.useFakeTimers()`, `vi.unstubAllGlobals()`/`vi.unstubAllEnvs()` tras stubs, y `vi.restoreAllMocks()` de los spies.
+- Prefiere aserciones precisas (`toEqual`, `toMatchObject`, `toThrow(...)`) a `toBeTruthy`; si el repo usa `node:assert/strict`, sigue ese estilo.

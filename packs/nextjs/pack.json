@@ -1,0 +1,1 @@
+{"nombre": "nextjs", "descripcion": "Next.js 16 con App Router: Server Components, Server Actions, Route Handlers, APIs asíncronas y caché.", "detecta": [{"npm": "next"}], "requiere": ["react"]}

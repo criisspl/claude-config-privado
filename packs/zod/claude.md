@@ -1,0 +1,5 @@
+- Zod 4: formatos como funciones top-level (`z.email()`, `z.url()`, `z.uuid()`, `z.iso.datetime()`), no `z.string().email()` (deprecado).
+- Mensajes personalizados con `{ error: "..." }`, no `message`; `invalid_type_error` y `required_error` ya no existen.
+- Todo dato externo (body, query, JSON del disco, respuesta de API) se valida con `safeParse` y se gestiona `success: false`; no uses `parse` salvo que quieras que reviente.
+- El tipo se deriva del schema (`type X = z.infer<typeof X>`); no lo escribas a mano aparte.
+- `z.record` lleva siempre clave y valor; `z.strictObject`/`z.looseObject` en vez de `.strict()`/`.passthrough()`; `z.enum(...)` en vez de `z.nativeEnum`.

@@ -1,0 +1,6 @@
+- Toda tabla de un esquema expuesto (`public`) lleva RLS activado (`alter table ... enable row level security`) y políticas por operación con `to authenticated`; en ellas usa `(select auth.uid())`, nunca `auth.uid()` a pelo. Las vistas llevan `security_invoker = true`.
+- La clave publishable (`sb_publishable_...`, antes `anon`) es pública. La secret (`sb_secret_...`, antes `service_role`) se salta RLS y nunca va al cliente, al bundle ni al repo.
+- Cambios de esquema: `supabase migration new <nombre>` y SQL nuevo; nunca edites una migración ya aplicada.
+- Tipos con `supabase gen types typescript` (no a mano) y `createClient<Database>(...)`; regenéralos tras cada migración.
+- Comprueba `error` en cada llamada: `const { data, error } = await ...`; no uses `data` sin mirarlo.
+- Tras tocar esquema o políticas, pasa `supabase db lint` y los advisors de seguridad si el proyecto los tiene.

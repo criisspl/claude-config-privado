@@ -1,0 +1,6 @@
+- Secretos con `wrangler secret put <NOMBRE>`; en local, en `.dev.vars` (ignorado por git). Nunca en `vars` de `wrangler.jsonc` ni en el código: `vars` es texto visible.
+- Los tipos de `env` salen de `wrangler types` (genera `worker-configuration.d.ts`; no se edita a mano). Vuelve a ejecutarlo cada vez que cambies bindings o la config.
+- Mantén `compatibility_date` fija y explícita; no la subas sin probar con `wrangler dev`.
+- Handler como módulo: `export default { async fetch(request, env, ctx) { ... } }`. Trabajo que no bloquea la respuesta, con `ctx.waitUntil()`.
+- Valida toda entrada (método, cabeceras, cuerpo, tamaño) antes de usarla o reenviarla; en endpoints públicos o que gastan dinero, rate limiting binding con una clave estable (no la IP).
+- Con `assets`, las rutas de API solo llegan al Worker si el asset no coincide o si las listas en `run_worker_first`.

@@ -1,0 +1,5 @@
+- Prohibido `any` (y `as any`, `@ts-ignore`): usa `unknown` y acota con comprobaciones, o un tipo del dominio. Si de verdad hace falta suprimir, `@ts-expect-error` con motivo.
+- Con `verbatimModuleSyntax`, lo que solo es tipo se importa con `import type { X }` o `import { type X }`; si no, el typecheck falla.
+- Con `allowImportingTsExtensions`, los imports relativos llevan la extensión `.ts` explícita (`./foo.ts`, no `./foo`).
+- Para objetos de configuración o tablas usa `satisfies Tipo` en vez de anotar, para no perder los literales. Evita `as` para "arreglar" errores de tipos.
+- No des un cambio por bueno sin pasar el typecheck del repo (`tsc --noEmit` o su script).

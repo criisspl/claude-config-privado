@@ -1,0 +1,1 @@
+{"nombre": "vitest", "descripcion": "Tests con Vitest: vi en vez de jest, mocks y timers limpiados, aserciones precisas.", "detecta": [{"npm": "vitest"}], "requiere": []}
