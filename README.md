@@ -15,7 +15,7 @@ git clone https://github.com/criisspl/claude-config.git ~/projects/claude-config
 CLAUDE_CONFIG_DIR=~/.claude-personal ~/projects/claude-config/install.sh   # en otro directorio
 ```
 
-`CLAUDE.md`, `RTK.md`, los agentes y las skills quedan enlazados al repo: un `git pull` los actualiza. `settings.json` se fusiona (con copia de seguridad) e incluye permisos para comandos de solo lectura, tests, lint y build, sin pedir confirmación; `git push` pregunta y `git push --force` y leer `.env` están bloqueados.
+`CLAUDE.md`, `RTK.md`, los agentes y las skills quedan enlazados al repo. Para ponerlo todo al día: `claude-config update` (desde cualquier carpeta; dentro de un proyecto, actualiza también sus paquetes). `settings.json` se fusiona (con copia de seguridad) e incluye permisos para comandos de solo lectura, tests, lint y build, sin pedir confirmación; `git push` pregunta y `git push --force` y leer `.env` están bloqueados.
 
 ## Paquetes por proyecto
 

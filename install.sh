@@ -2,26 +2,31 @@
 # Instala la configuración genérica de Claude Code (ahorro de tokens) en
 # $CLAUDE_CONFIG_DIR o, si no está definida, en ~/.claude. Se puede repetir.
 # Extras opcionales (ver README): ./install.sh agent-skills tdd-guard ...  |  ./install.sh todo
+# ./install.sh --solo-enlaces: solo rehace los enlaces (lo usa `claude-config update`).
 set -euo pipefail
+SOLO_ENLACES=""
+if [ "${1:-}" = "--solo-enlaces" ]; then SOLO_ENLACES=1; shift; fi
 EXTRAS=("$@")
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CFG="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 STAMP="$(date +%Y%m%d%H%M%S)"
 mkdir -p "$CFG/agents" "$CFG/skills"
-echo "→ Configuración en $CFG"
+[ -n "$SOLO_ENLACES" ] || echo "→ Configuración en $CFG"
 
 have() { command -v "$1" >/dev/null 2>&1; }
 
 # 1. Herramientas
-if ! have rtk; then
-  if have brew; then brew install rtk; else echo "⚠ Falta rtk: https://www.rtk-ai.app/"; fi
-fi
-if ! have codegraph; then
-  if have npm; then npm install -g @colbymchenry/codegraph; else echo "⚠ Falta codegraph (npm i -g @colbymchenry/codegraph)"; fi
-fi
-if ! have headroom; then
-  if have uv; then uv tool install headroom-ai; else echo "⚠ Falta headroom (uv tool install headroom-ai)"; fi
+if [ -z "$SOLO_ENLACES" ]; then
+  if ! have rtk; then
+    if have brew; then brew install rtk; else echo "⚠ Falta rtk: https://www.rtk-ai.app/"; fi
+  fi
+  if ! have codegraph; then
+    if have npm; then npm install -g @colbymchenry/codegraph; else echo "⚠ Falta codegraph (npm i -g @colbymchenry/codegraph)"; fi
+  fi
+  if ! have headroom; then
+    if have uv; then uv tool install headroom-ai; else echo "⚠ Falta headroom (uv tool install headroom-ai)"; fi
+  fi
 fi
 
 # 2. Ficheros enlazados al repo (un git pull los actualiza)
@@ -31,6 +36,7 @@ link() {
     mv "$dst" "$dst.bak-$STAMP"
     echo "  copia de seguridad: $dst.bak-$STAMP"
   fi
+  [ -L "$dst" ] || echo "  + $dst"
   ln -sfn "$src" "$dst"
 }
 link "$REPO/CLAUDE.md" "$CFG/CLAUDE.md"
@@ -41,13 +47,14 @@ for d in "$REPO"/skills/*/; do d="${d%/}"; link "$d" "$CFG/skills/$(basename "$d
 BIN="${CLAUDE_CONFIG_BIN:-$HOME/.local/bin}"
 mkdir -p "$BIN"
 link "$REPO/bin/claude-config.mjs" "$BIN/claude-config"
-case ":$PATH:" in *":$BIN:"*) ;; *) echo "⚠ Añade $BIN a tu PATH para usar el comando claude-config" ;; esac
+[ -n "$SOLO_ENLACES" ] || case ":$PATH:" in *":$BIN:"*) ;; *) echo "⚠ Añade $BIN a tu PATH para usar el comando claude-config" ;; esac
 # Enlaces a cosas que ya no están en el repo (p. ej. skills retiradas)
 for l in "$CFG"/skills/* "$CFG"/agents/*; do
   if [ -L "$l" ] && [ ! -e "$l" ]; then
     case "$(readlink "$l")" in "$REPO"/*) rm "$l"; echo "  quitado: $l" ;; esac
   fi
 done
+[ -z "$SOLO_ENLACES" ] || exit 0
 
 # 3. settings.json: fusiona sin pisar lo que ya haya
 [ -f "$CFG/settings.json" ] && cp "$CFG/settings.json" "$CFG/settings.json.bak-$STAMP"

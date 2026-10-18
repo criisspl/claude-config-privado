@@ -12,7 +12,8 @@ const AYUDA = `Uso: claude-config <comando> [opciones]
   init [--solo a,b]   Detecta la tecnología del proyecto e instala sus paquetes
   add <paquete...>    Añade paquetes
   remove <paquete...> Quita paquetes (no borra lo que hayas modificado)
-  update              Baja la última versión publicada y actualiza los paquetes del proyecto
+  update              Baja la última versión publicada, actualiza lo global (~/.claude)
+                      y, dentro de un proyecto, sus paquetes
   status              Versión instalada, paquetes, ficheros modificados y paquetes sugeridos
   list                Paquetes disponibles (✓ instalado, · detectado)
   version             Versión de la librería
@@ -75,8 +76,18 @@ try {
       break;
     }
     case "update": {
-      const lock = leerLock(proyecto) ?? sinLock();
+      const lock = leerLock(proyecto);
+      const antes = version(LIB);
       actualizarLibreria();
+      // Lo global (~/.claude): enlaza skills y agentes nuevos y quita los retirados.
+      console.log("Global:");
+      execFileSync("bash", [path.join(LIB, "install.sh"), "--solo-enlaces"], { stdio: "inherit" });
+      if (!lock) {
+        const ahora = version(LIB);
+        console.log(ahora === antes ? `✓ Ya tenías la última versión (v${ahora}).` : `✓ claude-config v${antes} → v${ahora}\n\n${cambiosEntre(LIB, antes, ahora)}`);
+        console.log("(Fuera de un proyecto con claude-config solo se actualiza lo global.)");
+        break;
+      }
       // Se aplica con el código recién descargado, por si el propio comando ha cambiado.
       execFileSync(process.execPath, [path.join(LIB, "bin", "claude-config.mjs"), "-C", proyecto, "aplicar"], { stdio: "inherit" });
       const nueva = version(LIB);
