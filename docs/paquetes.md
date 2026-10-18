@@ -17,6 +17,7 @@ claude-config update        # baja la última versión publicada y actualiza el 
 Después de `init`, `add`, `remove` o `update`, revisa los cambios y commitéalos: `.claude/` y el `CLAUDE.md` van en el repo para que el proyecto funcione igual en cualquier máquina.
 
 - **Lo que escribe:** `.claude/skills|agents|commands/…`, un bloque entre `<!-- claude-config:inicio -->` y `<!-- claude-config:fin -->` al final del `CLAUDE.md` (lo de fuera no se toca; si no hay `CLAUDE.md`, lo crea con `templates/CLAUDE.proyecto.md`) y `.claude/claude-config.json` con la versión, los paquetes y la huella de cada fichero.
+- **Formateador:** si el proyecto tiene `.prettierignore`, se le añade `.claude/` para que prettier no reescriba lo instalado (los ejemplos de código de las skills no siguen el estilo de cada proyecto).
 - **Si cambias un fichero instalado:** `update` no lo pisa; deja la versión nueva al lado como `<fichero>.nuevo` para que compares. `remove` tampoco lo borra.
 - **Versiones:** `update` pone tu copia de claude-config en el último tag `vX.Y.Z` publicado. Para fijar un proyecto a una versión, no ejecutes `update` en él.
 

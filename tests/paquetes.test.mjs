@@ -119,6 +119,26 @@ test("quitar todos los paquetes elimina el bloque del CLAUDE.md", () => {
   assert.ok(!fs.readFileSync(path.join(p, "CLAUDE.md"), "utf8").includes(INICIO));
 });
 
+test("añade .claude/ al .prettierignore una sola vez, y solo si existe", () => {
+  const lib = libreria();
+  const p = tmp();
+  escribir(p, { ".prettierignore": "dist/" });
+  aplicar(p, lib, ["react"]);
+  aplicar(p, lib, ["react"]);
+  assert.equal(fs.readFileSync(path.join(p, ".prettierignore"), "utf8"), "dist/\n.claude/\n");
+  const q = tmp();
+  aplicar(q, lib, ["react"]);
+  assert.ok(!fs.existsSync(path.join(q, ".prettierignore")));
+});
+
+test("el bloque lleva líneas en blanco junto a los comentarios (formato de prettier)", () => {
+  const p = tmp();
+  aplicar(p, libreria(), ["react"]);
+  const md = fs.readFileSync(path.join(p, "CLAUDE.md"), "utf8");
+  assert.ok(md.includes(INICIO + "\n\n## "));
+  assert.ok(md.includes("\n\n" + FIN));
+});
+
 test("falla con paquetes que no existen", () => {
   assert.throws(() => aplicar(tmp(), libreria(), ["cobol"]), /cobol/);
 });
