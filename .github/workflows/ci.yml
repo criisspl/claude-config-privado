@@ -15,3 +15,4 @@ jobs:
       - uses: actions/checkout@v4
       - run: shellcheck install.sh tests/check.sh
       - run: bash tests/check.sh
+      - run: npx -y agnix@0.59.0 . --target claude-code

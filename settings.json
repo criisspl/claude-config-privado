@@ -1,7 +1,31 @@
 {
   "model": "opusplan",
   "permissions": {
-    "allow": ["mcp__codegraph__*"]
+    "allow": [
+      "mcp__codegraph__*",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git show *)",
+      "Bash(git branch *)",
+      "Bash(ls *)",
+      "Bash(npm test *)",
+      "Bash(npm run test *)",
+      "Bash(npm run lint *)",
+      "Bash(npm run typecheck *)",
+      "Bash(npm run build *)",
+      "Bash(npm run format:check *)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:code.claude.com)",
+      "WebFetch(domain:developer.mozilla.org)"
+    ],
+    "ask": ["Bash(git push *)"],
+    "deny": [
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Read(./.env)",
+      "Read(./.env.*)"
+    ]
   },
   "hooks": {
     "PreToolUse": [

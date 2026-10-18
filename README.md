@@ -10,7 +10,32 @@ git clone https://github.com/criisspl/claude-config.git ~/projects/claude-config
 CLAUDE_CONFIG_DIR=~/.claude-personal ~/projects/claude-config/install.sh   # en otro directorio
 ```
 
-`CLAUDE.md`, `RTK.md`, los agentes y las skills quedan enlazados al repo: un `git pull` los actualiza. `settings.json` se fusiona (con copia de seguridad).
+`CLAUDE.md`, `RTK.md`, los agentes y las skills quedan enlazados al repo: un `git pull` los actualiza. `settings.json` se fusiona (con copia de seguridad) e incluye permisos para comandos de solo lectura, tests, lint y build, sin pedir confirmación; `git push` pregunta y `git push --force` y leer `.env` están bloqueados.
+
+## Extras opcionales
+
+No se instalan por defecto porque cada skill ocupa contexto y varios se solapan. Elige los que quieras:
+
+```bash
+~/projects/claude-config/install.sh agent-skills tdd-guard   # solo esos
+~/projects/claude-config/install.sh todo                     # todos
+```
+
+| Extra | Qué es | Ojo |
+| --- | --- | --- |
+| `agent-skills` | [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills): 25 skills de ingeniería (spec → plan → build → test → review → ship) y comandos `/agent-skills:*`. | Se solapa con `revisar`/`limpiar` y con Superpowers. |
+| `superpowers` | [obra/superpowers](https://github.com/obra/superpowers): TDD, debugging, planes, subagentes. | Muy insistente (fuerza brainstorming); gasta más tokens. |
+| `anthropic-skills` | [anthropics/skills](https://github.com/anthropics/skills): PDF, Word, Excel, PowerPoint, `skill-creator`, `mcp-builder`, `webapp-testing`, `frontend-design`… | — |
+| `ui-ux` | [ui-ux-pro-max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill): paletas, tipografías y guías UX. | Necesita Python 3. |
+| `tdd-guard` | [nizos/tdd-guard](https://github.com/nizos/tdd-guard): bloquea código sin test que falle. Luego `/tdd-guard:setup` en cada proyecto. | Node 22+; añade latencia y tokens en cada edición. |
+| `trailofbits` | [trailofbits/skills](https://github.com/trailofbits/skills): marketplace de auditoría de seguridad. Eliges los plugins con `/plugin`. | Licencia CC BY-SA 4.0. |
+| `mobile-mcp` | [mobile-mcp](https://github.com/mobile-next/mobile-mcp): controla simuladores iOS y emuladores Android (versión fijada, telemetría desactivada). | Xcode o Android SDK con un emulador arrancado. |
+| `dev-browser` | [dev-browser](https://github.com/SawyerHood/dev-browser): Claude abre un Chrome aislado y comprueba su propio trabajo (MCP headless). | macOS o Linux; no lo conectes a tu Chrome con sesiones. |
+| `vercel` | [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills): buenas prácticas de React/Next y despliegue en Vercel. | Instalador interactivo (`npx skills add`). |
+
+Comandos de Claude Code que ya vienen de serie y conviene usar (`/batch`, `/loop`, `/run-skill-generator`, `/fewer-permission-prompts`, `/skill-doctor`…): ver [`docs/comandos.md`](docs/comandos.md).
+
+La CI pasa [agnix](https://github.com/agent-sh/agnix) sobre el repo para validar `CLAUDE.md`, skills y agentes; en local: `npx agnix . --target claude-code`.
 
 Para el chat de claude.ai: ver `claude-ai.md`.
 
