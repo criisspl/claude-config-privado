@@ -12,6 +12,7 @@
 - Después de un cambio grande: `/revisar` (bugs) y luego `/limpiar` (simplificar). Antes de abrir un PR: `/preparar-pr`. Diseño poco claro: `/grill-me`.
 - Una rama por cambio y PR a `main`; commits pequeños con mensaje en imperativo.
 - Nunca: push directo a `main`, commitear secretos o `.env`, borrar o debilitar tests para que pase la CI.
+- Proyecto nuevo en la máquina: sugerir una vez `/run-skill-generator` y `/fewer-permission-prompts`.
 - Repo sin `CLAUDE.md`: proponer uno a partir de `templates/CLAUDE.proyecto.md` de claude-config, con el stack y los comandos detectados.
 
 # Ahorro de tokens

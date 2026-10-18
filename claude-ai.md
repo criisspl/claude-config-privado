@@ -15,14 +15,35 @@ Las de `skills/` también existen en el chat (`grill-me`, `revisar`, `limpiar`, 
 Para subir una skill nueva al chat, quítale del frontmatter todo menos `name` y `description`. claude.ai rechaza `model`, `argument-hint` y `disable-model-invocation`, en lugar de ignorarlos.
 
 ## 3. Plugins
-- Activos y útiles: Superpowers, Engineering, Design, GitHub, modern-web-guidance.
+- Activos y útiles: Superpowers, zizi-skills, Engineering, Design, GitHub, modern-web-guidance.
 - Desactivar los que no se usan (Ajustes → Plugins): cada skill instalada ocupa contexto y puede saltar cuando no toca.
 
-## 4. Memoria
+## 4. Equivalentes de lo que solo existe en Claude Code
+
+| En Claude Code | En el chat |
+| --- | --- |
+| `/plan`, `opusplan` | Skill `plan`, o pedir "haz un plan". El modelo lo eliges en el selector. |
+| `/code-review`, `/simplify` | Skills `revisar` y `limpiar`; plugin Engineering (`code-review`). |
+| `/batch` | Pedir que reparta el trabajo en subagentes en paralelo (o el plugin agent-army para trabajos grandes). |
+| `/loop` | Tareas programadas: "revisa X cada hora / mañana a las 9". |
+| `/run-skill-generator` | Skill `project-config` (zizi-skills): apunta cómo se instala, arranca y prueba cada repo. O el `CLAUDE.md` del repo. |
+| `/fewer-permission-prompts` | No aplica: aprobar con "permitir siempre" cuando salga el aviso. |
+| `/skill-doctor`, `/context` | Skill `explain-usage` (en qué se fueron los tokens de la sesión) y desactivar plugins que no uses. |
+| `/btw`, `/rewind`, `/compact` | Preguntar sin más; editar el mensaje que salió mal; chat nuevo con un resumen. |
+| addyosmani/agent-skills | Ya cubierto por zizi-skills (mismas skills: planning, tdd, debugging, source-driven-development, security-and-hardening…) y Superpowers. |
+| tdd-guard | Skills `tdd-skill` y `superpowers:test-driven-development` (guían, pero no bloquean). |
+| ui-ux-pro-max | Plugin Design, skill `frontend-design` y `zizi-skills:design-guide`. |
+| trailofbits | `zizi-skills:security-and-hardening`; en el directorio de plugins, *finecomb* (auditoría de seguridad). |
+| dev-browser | Navegador integrado o Claude en Chrome: abre tu app y la comprueba. |
+| mobile-mcp | Sin equivalente directo. Para la PWA, el navegador integrado en vista móvil; para emuladores, uso del ordenador desde la app de escritorio con el emulador abierto. |
+| RTK, CodeGraph, headroom, hooks | No aplican: el chat no ejecuta comandos en tu máquina ni tiene hooks. |
+| agnix | Corre en la CI de este repo; en el chat, pedir "pasa agnix al repo". |
+
+## 5. Memoria
 - En las preferencias guardadas: las reglas de código (pensar antes, lo más simple, cambios quirúrgicos, verificar) y las de tokens (preguntas simples directas; tareas complejas con plan y subagentes del modelo adecuado).
 - Un Proyecto por tema (finanzas, empleo, cada app) con su memoria separada, para que no se mezclen.
 
-## 5. Hábitos
+## 6. Hábitos
 - Un chat nuevo por tema: cada mensaje reenvía toda la conversación anterior.
 - Cuando un chat se alargue, pide un resumen y sigue en un chat nuevo pegándolo.
 - Documentos que usas a menudo: en un Proyecto, no pegados en cada chat.

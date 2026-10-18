@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Instala la configuración genérica de Claude Code (ahorro de tokens) en
 # $CLAUDE_CONFIG_DIR o, si no está definida, en ~/.claude. Se puede repetir.
+# Extras opcionales (ver README): ./install.sh agent-skills tdd-guard ...  |  ./install.sh todo
 set -euo pipefail
+EXTRAS=("$@")
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CFG="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
@@ -67,13 +69,43 @@ if have claude; then
   claude mcp get headroom >/dev/null 2>&1 ||
     claude mcp add-json -s user headroom '{"type":"stdio","command":"headroom","args":["mcp","serve"]}'
 
-  # 5. Plugins
-  for p in JuliusBrussee/caveman DietrichGebert/ponytail; do
-    claude plugin marketplace add "$p" >/dev/null 2>&1 || true
-  done
-  for p in caveman@caveman ponytail@ponytail; do
-    claude plugin install "$p" >/dev/null 2>&1 || echo "⚠ No se pudo instalar $p (hazlo con /plugin)"
-  done
+  # 5. Plugins base
+  plugin() { # <marketplace> [plugin@marketplace]
+    claude plugin marketplace add "$1" >/dev/null 2>&1 || true
+    if [ -n "${2:-}" ]; then
+      claude plugin install -y "$2" >/dev/null 2>&1 || echo "⚠ No se pudo instalar $2 (hazlo con /plugin)"
+    fi
+  }
+  plugin JuliusBrussee/caveman caveman@caveman
+  plugin DietrichGebert/ponytail ponytail@ponytail
+
+  # 6. Extras opcionales: solo los que se pidan (cada skill instalada ocupa contexto)
+  quiero() { local e; for e in ${EXTRAS[@]+"${EXTRAS[@]}"}; do if [ "$e" = "$1" ] || [ "$e" = todo ]; then return 0; fi; done; return 1; }
+  if quiero agent-skills; then plugin addyosmani/agent-skills agent-skills@addy-agent-skills; fi
+  if quiero superpowers; then plugin obra/superpowers-marketplace superpowers@superpowers-marketplace; fi
+  if quiero anthropic-skills; then
+    plugin anthropics/skills document-skills@anthropic-agent-skills
+    plugin anthropics/skills example-skills@anthropic-agent-skills
+  fi
+  if quiero ui-ux; then plugin nextlevelbuilder/ui-ux-pro-max-skill ui-ux-pro-max@ui-ux-pro-max-skill; fi
+  if quiero tdd-guard; then
+    plugin nizos/tdd-guard tdd-guard@tdd-guard
+    echo "  tdd-guard: ejecuta /tdd-guard:setup en cada proyecto donde lo quieras"
+  fi
+  if quiero trailofbits; then
+    plugin trailofbits/skills
+    echo "  trailofbits: elige los plugins que quieras con /plugin"
+  fi
+  if quiero mobile-mcp; then
+    claude mcp get mobile-mcp >/dev/null 2>&1 ||
+      claude mcp add -e MOBILEMCP_DISABLE_TELEMETRY=1 -s user mobile-mcp -- npx -y @mobilenext/mobile-mcp@1.0.11
+  fi
+  if quiero dev-browser; then
+    have dev-browser || npm install -g dev-browser@0.2.9 || echo "⚠ No se pudo instalar dev-browser"
+    claude mcp get dev-browser >/dev/null 2>&1 ||
+      claude mcp add -s user dev-browser -- dev-browser mcp --headless
+  fi
+  if quiero vercel; then npx -y skills add vercel-labs/agent-skills || echo "⚠ No se pudieron añadir las skills de Vercel"; fi
 else
   echo "⚠ No encuentro el comando claude: añade los MCP y plugins a mano"
 fi
