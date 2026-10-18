@@ -13,7 +13,7 @@
 - Una rama por cambio y PR a `main`; commits pequeños con mensaje en imperativo.
 - Nunca: push directo a `main`, commitear secretos o `.env`, borrar o debilitar tests para que pase la CI.
 - Proyecto nuevo en la máquina: sugerir una vez `/run-skill-generator` y `/fewer-permission-prompts`.
-- Repo sin `CLAUDE.md`: proponer uno a partir de `templates/CLAUDE.proyecto.md` de claude-config, con el stack y los comandos detectados.
+- Proyecto sin `.claude/claude-config.json`: sugerir `claude-config init` (detecta la tecnología e instala sus paquetes). Si `claude-config status` dice que hay una versión publicada más nueva, sugerir `claude-config update`.
 
 # Ahorro de tokens
 

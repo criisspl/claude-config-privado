@@ -93,7 +93,17 @@ try {
     }
     case "status": {
       const lock = leerLock(proyecto) ?? sinLock();
-      console.log(`Proyecto: v${lock.version} · librería: v${version(LIB)}`);
+      let publicada = "";
+      try {
+        const tags = git("ls-remote", "--tags", "--refs", "origin", "v*").match(/v\d+\.\d+\.\d+/g) ?? [];
+        const num = (t) => t.slice(1).split(".").map(Number);
+        tags.sort((a, b) => num(b).reduce((r, x, i) => r || x - num(a)[i], 0));
+        if (tags[0]) publicada = ` · última publicada: ${tags[0]}`;
+        if (tags[0] && tags[0] !== `v${lock.version}`) publicada += " (ejecuta `claude-config update`)";
+      } catch {
+        // Sin red o sin remoto: se informa solo de lo local.
+      }
+      console.log(`Proyecto: v${lock.version} · librería: v${version(LIB)}${publicada}`);
       console.log(`Paquetes: ${lock.paquetes.join(", ") || "ninguno"}`);
       const mod = modificados(proyecto);
       if (mod.length) console.log(`Modificados a mano: ${mod.join(", ")}`);
