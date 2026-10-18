@@ -1,6 +1,6 @@
 # claude-config
 
-Configuración genérica de Claude Code para gastar menos tokens: `opusplan`, RTK, CodeGraph, headroom, caveman/ponytail, agentes `implementador` (sonnet), `mecanico` (haiku) y `experto` (opus), skills `grill-me`, `revisar`, `limpiar` y `preparar-pr`, y reglas en `CLAUDE.md`. Sin nada de ninguna empresa.
+Configuración genérica de Claude Code para gastar menos tokens: `opusplan`, RTK, CodeGraph, headroom, caveman/ponytail, agentes `implementador` (sonnet), `mecanico` (haiku) y `experto` (opus), skills `grill-me` y `preparar-pr` (para revisar y limpiar se usan `/code-review` y `/simplify`, que vienen de serie), y reglas en `CLAUDE.md`. Sin nada de ninguna empresa.
 
 Para un repo nuevo: copia `templates/CLAUDE.proyecto.md` como `CLAUDE.md` y pide a Claude que rellene el stack.
 
@@ -23,9 +23,8 @@ No se instalan por defecto porque cada skill ocupa contexto y varios se solapan.
 
 | Extra | Qué es | Ojo |
 | --- | --- | --- |
-| `agent-skills` | [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills): 25 skills de ingeniería (spec → plan → build → test → review → ship) y comandos `/agent-skills:*`. | Se solapa con `revisar`/`limpiar` y con Superpowers. |
-| `superpowers` | [obra/superpowers](https://github.com/obra/superpowers): TDD, debugging, planes, subagentes. | Muy insistente (fuerza brainstorming); gasta más tokens. |
-| `anthropic-skills` | [anthropics/skills](https://github.com/anthropics/skills): PDF, Word, Excel, PowerPoint, `skill-creator`, `mcp-builder`, `webapp-testing`, `frontend-design`… | — |
+| `agent-skills` | [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills): 25 skills de ingeniería (spec → plan → build → test → review → ship) y comandos `/agent-skills:*`. | Elegido frente a Superpowers, que hace lo mismo pero es más insistente y gasta más tokens. |
+| `anthropic-skills` | [anthropics/skills](https://github.com/anthropics/skills) (`document-skills`): PDF, Word, Excel y PowerPoint. Las de ejemplo no, porque se pisan con `ui-ux` y `agent-skills`. | — |
 | `ui-ux` | [ui-ux-pro-max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill): paletas, tipografías y guías UX. | Necesita Python 3. |
 | `tdd-guard` | [nizos/tdd-guard](https://github.com/nizos/tdd-guard): bloquea código sin test que falle. Luego `/tdd-guard:setup` en cada proyecto. | Node 22+; añade latencia y tokens en cada edición. |
 | `trailofbits` | [trailofbits/skills](https://github.com/trailofbits/skills): marketplace de auditoría de seguridad. Eliges los plugins con `/plugin`. | Licencia CC BY-SA 4.0. |

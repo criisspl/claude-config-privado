@@ -10,12 +10,13 @@ Responde en español informal, corto y al grano. Sin introducciones, sin repetir
 ```
 
 ## 2. Skills de la cuenta
-Las de `skills/` también existen en el chat (`grill-me`, `revisar`, `limpiar`, `preparar-pr`), más `plan` y `caveman`, que en Claude Code no hacen falta: hay plan mode y el plugin caveman.
+En el chat están `grill-me` y `preparar-pr` (las de `skills/`), más `revisar`, `limpiar`, `plan` y `caveman`, que en Claude Code no hacen falta porque ya existen `/code-review`, `/simplify`, plan mode y el plugin caveman.
 
 Para subir una skill nueva al chat, quítale del frontmatter todo menos `name` y `description`. claude.ai rechaza `model`, `argument-hint` y `disable-model-invocation`, en lugar de ignorarlos.
 
 ## 3. Plugins
-- Activos y útiles: Superpowers, zizi-skills, Engineering, Design, GitHub, modern-web-guidance.
+- Activos y útiles: zizi-skills, Engineering, Design, GitHub, modern-web-guidance.
+- Superpowers desactivado: duplica TDD, debugging y planes de zizi-skills y fuerza el brainstorming.
 - Desactivar los que no se usan (Ajustes → Plugins): cada skill instalada ocupa contexto y puede saltar cuando no toca.
 
 ## 4. Equivalentes de lo que solo existe en Claude Code
@@ -23,15 +24,15 @@ Para subir una skill nueva al chat, quítale del frontmatter todo menos `name` y
 | En Claude Code | En el chat |
 | --- | --- |
 | `/plan`, `opusplan` | Skill `plan`, o pedir "haz un plan". El modelo lo eliges en el selector. |
-| `/code-review`, `/simplify` | Skills `revisar` y `limpiar`; plugin Engineering (`code-review`). |
+| `/code-review`, `/simplify` | Skills `revisar` y `limpiar` (no uses también `engineering:code-review`: hace lo mismo). |
 | `/batch` | Pedir que reparta el trabajo en subagentes en paralelo (o el plugin agent-army para trabajos grandes). |
 | `/loop` | Tareas programadas: "revisa X cada hora / mañana a las 9". |
 | `/run-skill-generator` | Skill `project-config` (zizi-skills): apunta cómo se instala, arranca y prueba cada repo. O el `CLAUDE.md` del repo. |
 | `/fewer-permission-prompts` | No aplica: aprobar con "permitir siempre" cuando salga el aviso. |
 | `/skill-doctor`, `/context` | Skill `explain-usage` (en qué se fueron los tokens de la sesión) y desactivar plugins que no uses. |
 | `/btw`, `/rewind`, `/compact` | Preguntar sin más; editar el mensaje que salió mal; chat nuevo con un resumen. |
-| addyosmani/agent-skills | Ya cubierto por zizi-skills (mismas skills: planning, tdd, debugging, source-driven-development, security-and-hardening…) y Superpowers. |
-| tdd-guard | Skills `tdd-skill` y `superpowers:test-driven-development` (guían, pero no bloquean). |
+| addyosmani/agent-skills | Ya cubierto por zizi-skills (mismas skills: planning, tdd, debugging, source-driven-development, security-and-hardening…). |
+| tdd-guard | Skill `zizi-skills:tdd-skill` (guía, pero no bloquea). |
 | ui-ux-pro-max | Plugin Design, skill `frontend-design` y `zizi-skills:design-guide`. |
 | trailofbits | `zizi-skills:security-and-hardening`; en el directorio de plugins, *finecomb* (auditoría de seguridad). |
 | dev-browser | Navegador integrado o Claude en Chrome: abre tu app y la comprueba. |

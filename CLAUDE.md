@@ -9,7 +9,7 @@
 # Flujo
 
 - Bug → primero un test que falle, luego el arreglo.
-- Después de un cambio grande: `/revisar` (bugs) y luego `/limpiar` (simplificar). Antes de abrir un PR: `/preparar-pr`. Diseño poco claro: `/grill-me`.
+- Después de un cambio grande: `/code-review` (bugs) y luego `/simplify` (limpiar). Antes de abrir un PR: `/preparar-pr`. Diseño poco claro: `/grill-me`.
 - Una rama por cambio y PR a `main`; commits pequeños con mensaje en imperativo.
 - Nunca: push directo a `main`, commitear secretos o `.env`, borrar o debilitar tests para que pase la CI.
 - Proyecto nuevo en la máquina: sugerir una vez `/run-skill-generator` y `/fewer-permission-prompts`.
