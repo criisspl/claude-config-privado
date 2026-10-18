@@ -37,6 +37,12 @@ link "$REPO/CLAUDE.md" "$CFG/CLAUDE.md"
 link "$REPO/RTK.md" "$CFG/RTK.md"
 for f in "$REPO"/agents/*.md; do link "$f" "$CFG/agents/$(basename "$f")"; done
 for d in "$REPO"/skills/*/; do d="${d%/}"; link "$d" "$CFG/skills/$(basename "$d")"; done
+# Enlaces a cosas que ya no están en el repo (p. ej. skills retiradas)
+for l in "$CFG"/skills/* "$CFG"/agents/*; do
+  if [ -L "$l" ] && [ ! -e "$l" ]; then
+    case "$(readlink "$l")" in "$REPO"/*) rm "$l"; echo "  quitado: $l" ;; esac
+  fi
+done
 
 # 3. settings.json: fusiona sin pisar lo que ya haya
 [ -f "$CFG/settings.json" ] && cp "$CFG/settings.json" "$CFG/settings.json.bak-$STAMP"
@@ -82,10 +88,8 @@ if have claude; then
   # 6. Extras opcionales: solo los que se pidan (cada skill instalada ocupa contexto)
   quiero() { local e; for e in ${EXTRAS[@]+"${EXTRAS[@]}"}; do if [ "$e" = "$1" ] || [ "$e" = todo ]; then return 0; fi; done; return 1; }
   if quiero agent-skills; then plugin addyosmani/agent-skills agent-skills@addy-agent-skills; fi
-  if quiero superpowers; then plugin obra/superpowers-marketplace superpowers@superpowers-marketplace; fi
   if quiero anthropic-skills; then
     plugin anthropics/skills document-skills@anthropic-agent-skills
-    plugin anthropics/skills example-skills@anthropic-agent-skills
   fi
   if quiero ui-ux; then plugin nextlevelbuilder/ui-ux-pro-max-skill ui-ux-pro-max@ui-ux-pro-max-skill; fi
   if quiero tdd-guard; then

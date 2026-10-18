@@ -14,8 +14,8 @@ Vienen con Claude Code; no hay que instalar nada. Lista completa: <https://code.
 | Comando | Para qué |
 | --- | --- |
 | `/plan [tarea]` | Modo plan: diseña sin tocar código. También `Shift+Tab`. |
-| `/code-review` (alias `/review`) | Busca bugs en el diff o en un PR (`/code-review 123`, `--fix`). Complementa a `/revisar`. |
-| `/simplify` | Limpia el código cambiado con varios agentes en paralelo. Equivale a `/limpiar`. |
+| `/code-review` (alias `/review`) | Busca bugs en el diff o en un PR (`/code-review 123`, `--fix`). |
+| `/simplify` | Limpia el código cambiado con varios agentes en paralelo. |
 | `/batch <cambio>` | Reparte un cambio repetitivo en muchos agentes, cada uno en su worktree, y abre PRs. Para migraciones, no para rediseños. |
 | `/loop <intervalo> <prompt>` | Repite un prompt mientras la sesión sigue abierta (vigilar un deploy, la CI, logs). |
 | `/btw <pregunta>` | Pregunta lateral que no ensucia el contexto. |
