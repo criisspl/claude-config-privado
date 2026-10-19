@@ -29,10 +29,27 @@
   },
   "hooks": {
     "PreToolUse": [
-      { "matcher": "Bash", "hooks": [{ "type": "command", "command": "rtk hook claude" }] }
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "rtk hook claude" },
+          { "type": "command", "command": "\"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/git-safety.sh\"" }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          { "type": "command", "command": "\"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/no-secret-leak.sh\"" }
+        ]
+      }
     ],
     "UserPromptSubmit": [
-      { "hooks": [{ "type": "command", "command": "codegraph prompt-hook" }] }
+      {
+        "hooks": [
+          { "type": "command", "command": "codegraph prompt-hook" },
+          { "type": "command", "command": "\"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/opus-watch.sh\"" }
+        ]
+      }
     ]
   },
   "extraKnownMarketplaces": {
@@ -42,5 +59,6 @@
   "enabledPlugins": {
     "caveman@caveman": true,
     "ponytail@ponytail": true
-  }
+  },
+  "syncClaudeAiPlugins": false
 }

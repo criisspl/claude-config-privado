@@ -11,7 +11,7 @@ EXTRAS=("$@")
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CFG="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 STAMP="$(date +%Y%m%d%H%M%S)"
-mkdir -p "$CFG/agents" "$CFG/skills"
+mkdir -p "$CFG/agents" "$CFG/skills" "$CFG/hooks"
 [ -n "$SOLO_ENLACES" ] || echo "→ Configuración en $CFG"
 
 have() { command -v "$1" >/dev/null 2>&1; }
@@ -42,6 +42,7 @@ link() {
 link "$REPO/CLAUDE.md" "$CFG/CLAUDE.md"
 link "$REPO/RTK.md" "$CFG/RTK.md"
 for f in "$REPO"/agents/*.md; do link "$f" "$CFG/agents/$(basename "$f")"; done
+for f in "$REPO"/hooks/*.sh; do link "$f" "$CFG/hooks/$(basename "$f")"; done
 for d in "$REPO"/skills/*/; do d="${d%/}"; link "$d" "$CFG/skills/$(basename "$d")"; done
 # Comando claude-config (paquetes por proyecto)
 BIN="${CLAUDE_CONFIG_BIN:-$HOME/.local/bin}"
@@ -70,7 +71,12 @@ def merge(a, b):
             merge(a[k], v)
         elif isinstance(v, list) and isinstance(a.get(k), list):
             for item in v:
-                if item not in a[k]:
+                # Grupos de hooks: fusionar con el del mismo matcher en vez de duplicarlo
+                same = next((x for x in a[k] if isinstance(item, dict) and "hooks" in item
+                             and isinstance(x, dict) and x.get("matcher") == item.get("matcher")), None)
+                if same is not None:
+                    same["hooks"] += [h for h in item["hooks"] if h not in same["hooks"]]
+                elif item not in a[k]:
                     a[k].append(item)
         else:
             a[k] = v
