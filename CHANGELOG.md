@@ -9,7 +9,7 @@ Cada versión publicada tiene su sección `## X.Y.Z`. Al subir `VERSION` en `mai
 ## 1.1.0
 
 - Agente nuevo `buscador` (haiku, solo lectura) para localizar código sin llenar el contexto principal.
-- `mecanico` con `effort: low`, `maxTurns` y `omitClaudeMd`; `implementador` con `maxTurns`.
+- `mecanico` con `effort: low` y `maxTurns`; `implementador` con `maxTurns`.
 - Regla: tests largos, logs y búsquedas amplias van a un subagente.
 
 ## 1.0.2

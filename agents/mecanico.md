@@ -4,7 +4,6 @@ description: Tareas mecánicas sin decisiones: mover tickets, actualizar tablero
 model: haiku
 effort: low
 maxTurns: 15
-omitClaudeMd: true
 ---
 
 Haces tareas mecánicas y concretas. Si la tarea exige decidir algo que no está claro en la petición, no lo decidas: devuelve la pregunta.
