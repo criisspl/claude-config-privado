@@ -15,7 +15,9 @@ git clone https://github.com/criisspl/claude-config.git ~/projects/claude-config
 CLAUDE_CONFIG_DIR=~/.claude-personal ~/projects/claude-config/install.sh   # en otro directorio
 ```
 
-`CLAUDE.md`, `RTK.md`, los agentes y las skills quedan enlazados al repo. Para ponerlo todo al día: `claude-config update` (desde cualquier carpeta; dentro de un proyecto, actualiza también sus paquetes). `settings.json` se fusiona (con copia de seguridad) e incluye permisos para comandos de solo lectura, tests, lint y build, sin pedir confirmación; `git push` pregunta y `git push --force` y leer `.env` están bloqueados.
+Hooks: `opus-watch` (avisa si la sesión va en Opus fuera de plan mode), `git-safety` (bloquea force push, `reset --hard`, `clean -f`) y `no-secret-leak` (bloquea escribir claves). `syncClaudeAiPlugins: false` para no cargar los plugins de claude.ai en cada sesión.
+
+`CLAUDE.md`, `RTK.md`, los agentes, las skills y los hooks quedan enlazados al repo. Para ponerlo todo al día: `claude-config update` (desde cualquier carpeta; dentro de un proyecto, actualiza también sus paquetes). `settings.json` se fusiona (con copia de seguridad) e incluye permisos para comandos de solo lectura, tests, lint y build, sin pedir confirmación; `git push` pregunta y `git push --force` y leer `.env` están bloqueados.
 
 ## Paquetes por proyecto
 
