@@ -6,6 +6,12 @@ Cada versión publicada tiene su sección `## X.Y.Z`. Al subir `VERSION` en `mai
 - **Menor** (1.1.0): paquetes o skills nuevos, reglas nuevas.
 - **Parche** (1.0.1): correcciones de texto o de errores.
 
+## 1.1.0
+
+- Agente nuevo `buscador` (haiku, solo lectura) para localizar código sin llenar el contexto principal.
+- `mecanico` con `effort: low`, `maxTurns` y `omitClaudeMd`; `implementador` con `maxTurns`.
+- Regla: tests largos, logs y búsquedas amplias van a un subagente.
+
 ## 1.0.2
 
 - `claude-config update` rehace también los enlaces globales de `~/.claude`: enlaza las skills y agentes globales nuevos y quita los retirados, sin volver a ejecutar `install.sh`.
