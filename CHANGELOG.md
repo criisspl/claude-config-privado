@@ -6,6 +6,11 @@ Cada versión publicada tiene su sección `## X.Y.Z`. Al subir `VERSION` en `mai
 - **Menor** (1.1.0): paquetes o skills nuevos, reglas nuevas.
 - **Parche** (1.0.1): correcciones de texto o de errores.
 
+## 1.2.0
+
+- Carpeta `rules/` con la metodología: flujo plan → implementar → auditar, elegir modelo, ahorro de tokens, verificar antes de «hecho», worktrees y ramas, y cinco notas más.
+- Hooks nuevos: `ctx-guard`, `compact-reinject` y `no-screenshot-main`, registrados en `settings.json`.
+
 ## 1.1.0
 
 - Agente nuevo `buscador` (haiku, solo lectura) para localizar código sin llenar el contexto principal.
