@@ -15,9 +15,21 @@ git clone https://github.com/criisspl/claude-config.git ~/projects/claude-config
 CLAUDE_CONFIG_DIR=~/.claude-personal ~/projects/claude-config/install.sh   # en otro directorio
 ```
 
-Hooks: `opus-watch` (avisa si la sesión va en Opus fuera de plan mode), `git-safety` (bloquea force push, `reset --hard`, `clean -f`) y `no-secret-leak` (bloquea escribir claves). `syncClaudeAiPlugins: false` para no cargar los plugins de claude.ai en cada sesión.
+Hooks: `opus-watch` (avisa si la sesión va en Opus fuera de plan mode), `git-safety` (bloquea force push, `reset --hard`, `clean -f`), `no-secret-leak` (bloquea escribir claves), `ctx-guard` (bloquea el prompt si el contexto pasa de 140k tokens), `compact-reinject` (tras compactar, reinyecta el primer y el último prompt) y `no-screenshot-main` (sin capturas de Chrome DevTools en el hilo principal). Explicación en [`rules/`](rules/). `syncClaudeAiPlugins: false` para no cargar los plugins de claude.ai en cada sesión.
 
 `CLAUDE.md`, `RTK.md`, los agentes, las skills y los hooks quedan enlazados al repo. Para ponerlo todo al día: `claude-config update` (desde cualquier carpeta; dentro de un proyecto, actualiza también sus paquetes). `settings.json` se fusiona (con copia de seguridad) e incluye permisos para comandos de solo lectura, tests, lint y build, sin pedir confirmación; `git push` pregunta y `git push --force` y leer `.env` están bloqueados.
+
+## Metodología (`rules/`)
+
+Cómo trabajar con IA: pocas reglas, cada una en su nota.
+
+- [`flujo-plan-implementar-auditar`](rules/flujo-plan-implementar-auditar.md): las tres fases de toda tarea de código.
+- [`elegir-modelo`](rules/elegir-modelo.md): el modelo más barato que dé la calidad suficiente.
+- [`ahorro-de-tokens`](rules/ahorro-de-tokens.md): contexto pequeño, leer poco, delegar.
+- [`verificar-antes-de-hecho`](rules/verificar-antes-de-hecho.md): lint, tipos, tests, build y UI.
+- [`worktrees-y-ramas`](rules/worktrees-y-ramas.md): una rama por cambio y limpieza al terminar.
+- [`una-peticion-por-turno`](rules/una-peticion-por-turno.md), [`explicaciones-claras`](rules/explicaciones-claras.md), [`modelo-visible`](rules/modelo-visible.md).
+- [`hooks-de-contexto`](rules/hooks-de-contexto.md) (`ctx-guard`, `compact-reinject`) y [`capturas-en-subagente`](rules/capturas-en-subagente.md) (`no-screenshot-main`).
 
 ## Paquetes por proyecto
 
