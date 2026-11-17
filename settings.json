@@ -64,6 +64,15 @@
             "command": "\"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/no-secret-leak.sh\""
           }
         ]
+      },
+      {
+        "matcher": "mcp__chrome-devtools__take_screenshot",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/no-screenshot-main.sh\""
+          }
+        ]
       }
     ],
     "UserPromptSubmit": [
@@ -76,11 +85,24 @@
           {
             "type": "command",
             "command": "\"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/opus-watch.sh\""
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/ctx-guard.sh\""
           }
         ]
       }
     ],
     "SessionStart": [
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/compact-reinject.sh\""
+          }
+        ]
+      },
       {
         "matcher": "^(startup|resume|clear)$",
         "hooks": [
