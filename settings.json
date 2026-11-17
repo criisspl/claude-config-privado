@@ -19,12 +19,21 @@
       "WebFetch(domain:code.claude.com)",
       "WebFetch(domain:developer.mozilla.org)"
     ],
-    "ask": ["Bash(git push *)"],
+    "ask": [
+      "Bash(git push *)"
+    ],
     "deny": [
       "Bash(git push --force *)",
       "Bash(git push -f *)",
+      "Edit(**/.env*)",
+      "Edit(~/.ssh/**)",
+      "Read(**/.env)",
+      "Read(**/.env.*)",
       "Read(./.env)",
-      "Read(./.env.*)"
+      "Read(./.env.*)",
+      "Read(~/.aws/**)",
+      "Read(~/.config/gh/**)",
+      "Read(~/.ssh/**)"
     ]
   },
   "hooks": {
@@ -32,29 +41,82 @@
       {
         "matcher": "Bash",
         "hooks": [
-          { "type": "command", "command": "rtk hook claude" },
-          { "type": "command", "command": "\"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/git-safety.sh\"" }
+          {
+            "type": "command",
+            "command": "rtk hook claude"
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/git-safety.sh\""
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/rm-safety.sh\"",
+            "timeout": 5
+          }
         ]
       },
       {
         "matcher": "Write|Edit|MultiEdit",
         "hooks": [
-          { "type": "command", "command": "\"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/no-secret-leak.sh\"" }
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/no-secret-leak.sh\""
+          }
         ]
       }
     ],
     "UserPromptSubmit": [
       {
         "hooks": [
-          { "type": "command", "command": "codegraph prompt-hook" },
-          { "type": "command", "command": "\"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/opus-watch.sh\"" }
+          {
+            "type": "command",
+            "command": "codegraph prompt-hook"
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/opus-watch.sh\""
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "^(startup|resume|clear)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/memory-lint.sh\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/cost-log.sh\"",
+            "timeout": 10
+          }
         ]
       }
     ]
   },
   "extraKnownMarketplaces": {
-    "caveman": { "source": { "source": "github", "repo": "JuliusBrussee/caveman" } },
-    "ponytail": { "source": { "source": "github", "repo": "DietrichGebert/ponytail" } }
+    "caveman": {
+      "source": {
+        "source": "github",
+        "repo": "JuliusBrussee/caveman"
+      }
+    },
+    "ponytail": {
+      "source": {
+        "source": "github",
+        "repo": "DietrichGebert/ponytail"
+      }
+    }
   },
   "enabledPlugins": {
     "caveman@caveman": true,
