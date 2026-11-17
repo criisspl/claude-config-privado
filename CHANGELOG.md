@@ -6,6 +6,13 @@ Cada versión publicada tiene su sección `## X.Y.Z`. Al subir `VERSION` en `mai
 - **Menor** (1.1.0): paquetes o skills nuevos, reglas nuevas.
 - **Parche** (1.0.1): correcciones de texto o de errores.
 
+## 1.3.0
+
+- Hook `rm-safety`: frena `rm -r` sobre `/`, `~`, `.`, `..`, `*` y `DROP`/`TRUNCATE`/`drop-all`. Empieza en modo `observe` (solo registra); `hooks/rm-safety.mode` = `block` para bloquear.
+- Hook `memory-lint` (SessionStart): avisa de `MEMORY.md` demasiado grande, enlaces rotos y ficheros sin indexar.
+- Hooks `cost-log` (Stop) y `cost-report.sh`: registran tokens por sesión, modelo y clave Jira en `~/.cache/claude-guard/cost.jsonl` y los resumen por semana.
+- Permisos: `deny` de lectura de `.env*`, `~/.ssh`, `~/.aws` y `~/.config/gh`, y de edición de `.env*` y `~/.ssh`.
+
 ## 1.2.0
 
 - Carpeta `rules/` con la metodología: flujo plan → implementar → auditar, elegir modelo, ahorro de tokens, verificar antes de «hecho», worktrees y ramas, y cinco notas más.
