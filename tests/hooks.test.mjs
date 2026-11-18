@@ -92,3 +92,61 @@ test("read-guard deja pasar ficheros normales", () => {
   assert.equal(leer("/p/package.json").code, 0);
   assert.equal(leer("/p/distribution/a.ts").code, 0);
 });
+
+function repoConCambios(ficheros) {
+  const d = repoEnRama("main");
+  const g = (...a) => spawnSync("git", ["-c", "user.email=t@t", "-c", "user.name=t", ...a], { cwd: d });
+  fs.writeFileSync(path.join(d, "base.txt"), "base\n");
+  g("add", "."); g("commit", "-q", "-m", "base");
+  for (const [f, c] of Object.entries(ficheros)) fs.writeFileSync(path.join(d, f), c);
+  return d;
+}
+const parar = (cwd, extra = {}) => {
+  const r = spawnSync("bash", [path.join(HOOKS, "stop-guard.sh")], { input: JSON.stringify({ cwd, ...extra }), cwd, encoding: "utf8" });
+  return { code: r.status, out: r.stdout, err: r.stderr };
+};
+
+test("stop-guard avisa de console.log, debugger y .only( añadidos", () => {
+  for (const linea of ["console.log('x')", "debugger;", "describe.only('a', () => {})", "it.only('a', f)"]) {
+    const d = repoConCambios({ "base.txt": `base\n${linea}\n` });
+    const r = parar(d);
+    assert.equal(r.code, 2, linea);
+    assert.match(r.err, /base\.txt/);
+  }
+});
+
+test("stop-guard mira también los cambios en stage", () => {
+  const d = repoConCambios({ "base.txt": "base\nconsole.log(1)\n" });
+  spawnSync("git", ["add", "."], { cwd: d });
+  assert.equal(parar(d).code, 2);
+});
+
+test("stop-guard ignora líneas que no se añaden y repos limpios", () => {
+  assert.equal(parar(repoConCambios({})).code, 0);
+  const d = repoConCambios({ "base.txt": "console.log(1)\n" });
+  spawnSync("git", ["add", "."], { cwd: d });
+  spawnSync("git", ["-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "-m", "x"], { cwd: d });
+  assert.equal(parar(d).code, 0);
+  assert.equal(parar(repoConCambios({ "base.txt": "base\nconsole.warn(1)\n" })).code, 0);
+});
+
+test("stop-guard avisa de package.json sin lockfile y no si va con él", () => {
+  const solo = repoConCambios({ "package.json": "{}\n" });
+  spawnSync("git", ["add", "."], { cwd: solo });
+  const r = parar(solo);
+  assert.equal(r.code, 2);
+  assert.match(r.err, /lockfile/);
+  const con = repoConCambios({ "package.json": "{}\n", "package-lock.json": "{}\n" });
+  spawnSync("git", ["add", "."], { cwd: con });
+  assert.equal(parar(con).code, 0);
+});
+
+test("stop-guard no entra en bucle: stop_hook_active sale con 0", () => {
+  const d = repoConCambios({ "base.txt": "base\nconsole.log(1)\n" });
+  assert.equal(parar(d, { stop_hook_active: true }).code, 0);
+});
+
+test("stop-guard fuera de un repo sale con 0", () => {
+  const d = fs.mkdtempSync(path.join(os.tmpdir(), "hk-"));
+  assert.equal(parar(d).code, 0);
+});
