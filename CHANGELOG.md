@@ -8,7 +8,7 @@ Cada versión publicada tiene su sección `## X.Y.Z`. Al subir `VERSION` en `mai
 
 ## 1.5.0
 
-- Hooks nuevos: `read-guard` (Read: bloquea lockfiles, `dist/` y `.next/`), `stop-guard` (Stop: avisa de `console.log`, `debugger`, `.only(` añadidos y de `package.json` sin lockfile; respeta `stop_hook_active`), `permission-readonly` (PermissionRequest: aprueba `gh`, `git`, `jq`, `rg` y `wc` de solo lectura, sin encadenados ni redirecciones) y `worktree-link` (SessionStart: enlaza `.claude/settings.local.json` y `.env.local` del repo principal en los worktrees).
+- Hooks nuevos: `read-guard` (Read: bloquea lockfiles, `dist/` y `.next/`), `stop-guard` (Stop: avisa de `console.log`, `debugger`, `.only(` añadidos y de `package.json` sin lockfile; respeta `stop_hook_active`), `permission-readonly` (PermissionRequest: aprueba `gh`, `git`, `jq`, `rg` y `wc` de solo lectura, sin encadenados ni redirecciones) y `worktree-link` (SessionStart: enlaza `.claude/settings.local.json` y `.env.local` del repo principal en los worktrees). `gh-account-check` (SessionStart: muestra la cuenta gh activa y la org del remote, y avisa si no coinciden; solo informa).
 - Skills nuevas: `/pr-threads` (hilos de review sin resolver) y `/jira-ac-check` (criterios de aceptación contra el diff, solo manual).
 - Agente nuevo `visual` con `mcpServers: [figma]`.
 - `tests/check.sh` valida `disable-model-invocation`, `maxTurns` y `memory`.
