@@ -141,6 +141,15 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/stop-guard.sh\"",
+            "timeout": 10
+          }
+        ]
       }
     ]
   },
