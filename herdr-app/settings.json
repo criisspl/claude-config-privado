@@ -1,0 +1,25 @@
+{
+  "zoom": 1,
+  "sounds": {
+    "enabled": true,
+    "done": "sounds/silencio.wav"
+  },
+  "font_ligatures": false,
+  "terminal_line_height": 1.15,
+  "terminal_cell_width": 1,
+  "terminal_scroll_speed": 1,
+  "minimum_contrast": 1,
+  "theme": {
+    "light": "estilo-claro",
+    "dark": "estilo"
+  },
+  "colors": {
+    "accent": "#a67ff0"
+  },
+  "worktrees": {
+    "directory": "~/projects/worktrees"
+  },
+  "appearance": "dark",
+  "font": "JetBrainsMono Nerd Font Mono",
+  "font_size": 14
+}
