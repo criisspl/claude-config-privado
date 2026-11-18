@@ -72,3 +72,23 @@ test("protect-config no dice nada de otros ficheros", () => {
   assert.equal(r.code, 0);
   assert.equal(r.out, "");
 });
+
+const leer = (file_path) => correr("read-guard.sh", { file_path });
+
+test("read-guard bloquea lockfiles", () => {
+  for (const f of ["package-lock.json", "/x/yarn.lock", "/x/pnpm-lock.yaml", "composer.lock"]) {
+    assert.equal(leer(f).code, 2, f);
+  }
+});
+
+test("read-guard bloquea dist/ y .next/", () => {
+  assert.equal(leer("/p/dist/app.js").code, 2);
+  assert.equal(leer("dist/app.js").code, 2);
+  assert.equal(leer("/p/.next/cache/x").code, 2);
+});
+
+test("read-guard deja pasar ficheros normales", () => {
+  assert.equal(leer("/p/src/index.ts").code, 0);
+  assert.equal(leer("/p/package.json").code, 0);
+  assert.equal(leer("/p/distribution/a.ts").code, 0);
+});
