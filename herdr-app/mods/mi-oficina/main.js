@@ -69,6 +69,7 @@ export default class MiOficina extends View {
     const t = theme();
     const all = terminals();
     const ags = agents().filter((a) => a.app === "claude-code");
+    const branch = new Map(panes().filter((p) => p.terminal && p.branch).map((p) => [p.terminal, p.branch]));
     const groups = new Map();
     for (const a of ags) {
       const kids = all.filter((k) => k.parent === a.address && k.state === "live");
@@ -85,13 +86,13 @@ export default class MiOficina extends View {
     for (const [id, g] of groups) {
       const row = h_flex().flex_wrap().gap(10).items_start();
       for (const { a, kids } of g.items) {
-        row.child(this.cell(a.title || "claude", pac(a.status === "working"), a.status, t, `s-${a.address}`));
+        row.child(this.cell(a.title || "claude", pac(a.status === "working"), a.status, t, `s-${a.address}`, branch.get(a.address)));
         kids.forEach((k, i) => {
           const st = k.status === "error" ? "blocked" : k.status;
           row.child(this.cell(k.title || k.address, sprite(ghostOf(k, i), st === "working", st), st, t, `k-${k.address}`));
         });
         (this.subs.get(a.address) ?? []).forEach((n, i) =>
-          row.child(this.cell(n, sprite(ghostOf({ title: n }, kids.length + i), true, "working"), "working", t, `h-${a.address}-${i}`)));
+          row.child(this.cell(ghostOf({ title: n }, kids.length + i), sprite(ghostOf({ title: n }, kids.length + i), true, "working"), "working", t, `h-${a.address}-${i}`, n)));
       }
       root.child(v_flex().id(`g-${id}`).flex_none().p(6).gap(4).rounded(8).border_2().border_color(MAZE)
         .on_size_change((size, cx) => { this.heights.set(id, size.height ?? size.h ?? 0); this.fit(); })
@@ -101,12 +102,13 @@ export default class MiOficina extends View {
     return root;
   }
 
-  cell(label, spr, st, t, id) {
+  cell(label, spr, st, t, id, sub) {
     const col = st === "working" ? t.working : st === "blocked" ? t.blocked : st === "done" ? t.done : t.idle;
     const b = badge(st);
     const box = div().id(id).w(CELL).flex_none().flex().flex_col().items_center().gap(2)
       .child(div().relative().w(S).h(S).flex_none().child(spr).children(b ? [b] : []))
-      .child(div().w(CELL).truncate().text_size(9).text_center().text_color(col).child(label));
+      .child(div().w(CELL).truncate().text_size(9).text_center().text_color(col).child(label))
+      .children(sub ? [div().w(CELL).truncate().text_size(8).text_center().text_color(t.dim).child(sub)] : []);
     return box;
   }
 }
