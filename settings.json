@@ -82,6 +82,15 @@
             "command": "\"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/no-screenshot-main.sh\""
           }
         ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/read-guard.sh\""
+          }
+        ]
       }
     ],
     "UserPromptSubmit": [
