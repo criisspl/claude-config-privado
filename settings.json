@@ -66,6 +66,15 @@
         ]
       },
       {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/protect-config.sh\""
+          }
+        ]
+      },
+      {
         "matcher": "mcp__chrome-devtools__take_screenshot",
         "hooks": [
           {

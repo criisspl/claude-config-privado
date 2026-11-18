@@ -6,6 +6,11 @@ Cada versión publicada tiene su sección `## X.Y.Z`. Al subir `VERSION` en `mai
 - **Menor** (1.1.0): paquetes o skills nuevos, reglas nuevas.
 - **Parche** (1.0.1): correcciones de texto o de errores.
 
+## 1.4.0
+
+- `git-safety`: bloquea el push directo a `main`/`master` (`origin main`, `HEAD:main`, y `git push` sin refspec estando en `main`) y `git commit --no-verify`.
+- Hook nuevo `protect-config` (Edit|Write): bloquea editar `.eslintrc*`, `tsconfig*.json`, `jest.config.*` y `vitest.config.*`; pide confirmación en `package.json`, `.github/workflows/*` y `vite.config.*`.
+
 ## 1.3.0
 
 - Hook `rm-safety`: frena `rm -r` sobre `/`, `~`, `.`, `..`, `*` y `DROP`/`TRUNCATE`/`drop-all`. Empieza en modo `observe` (solo registra); `hooks/rm-safety.mode` = `block` para bloquear.
