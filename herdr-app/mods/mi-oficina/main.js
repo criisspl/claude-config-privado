@@ -2,7 +2,7 @@
 // Dentro: la sesión (comecocos) y los agentes que lanzó (fantasmas). Crece y encoge solo.
 import { View, div, image } from "gpui-kit";
 import { h_flex, v_flex } from "gpui-base";
-import { theme, agents, terminals, panes, run } from "herdr";
+import { theme, agents, terminals, panes, run, exec } from "herdr";
 
 const D = "mods/mi-oficina/";
 const MAZE = "#2121de";
@@ -38,6 +38,21 @@ export default class MiOficina extends View {
   heights = new Map();
   last = 0;
   empty = false;
+  subs = new Map(); // terminal -> tipos de subagente activos (los escribe el hook oficina-subagent.sh)
+
+  init(_props, cx) {
+    const poll = async (cx) => {
+      const r = await exec("sh", ["-c", 'find "$HOME/.local/state/oficina" -type f -mmin -30 -exec grep -H . {} + 2>/dev/null']);
+      const m = new Map();
+      for (const l of (r.stdout || "").split("\n")) {
+        const x = /oficina\/([^/]+)\/[^:]+:(.+)$/.exec(l);
+        if (x) m.set(x[1], [...(m.get(x[1]) ?? []), x[2]]);
+      }
+      if (JSON.stringify([...m]) !== JSON.stringify([...this.subs])) { this.subs = m; cx.notify(); }
+    };
+    poll(cx);
+    cx.timer.every(2000, poll);
+  }
 
   // Ajusta el alto de su pane al contenido (rectángulos + huecos), con tope y sin oscilar.
   fit() {
@@ -75,6 +90,8 @@ export default class MiOficina extends View {
           const st = k.status === "error" ? "blocked" : k.status;
           row.child(this.cell(k.title || k.address, sprite(ghostOf(k, i), st === "working", st), st, t, `k-${k.address}`));
         });
+        (this.subs.get(a.address) ?? []).forEach((n, i) =>
+          row.child(this.cell(n, sprite(ghostOf({ title: n }, kids.length + i), true, "working"), "working", t, `h-${a.address}-${i}`)));
       }
       root.child(v_flex().id(`g-${id}`).flex_none().p(6).gap(4).rounded(8).border_2().border_color(MAZE)
         .on_size_change((size, cx) => { this.heights.set(id, size.height ?? size.h ?? 0); this.fit(); })
