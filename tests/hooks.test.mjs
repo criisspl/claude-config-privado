@@ -150,3 +150,35 @@ test("stop-guard fuera de un repo sale con 0", () => {
   const d = fs.mkdtempSync(path.join(os.tmpdir(), "hk-"));
   assert.equal(parar(d).code, 0);
 });
+
+test("git-safety bloquea force push con refspec +", () => {
+  for (const c of ["git push origin +main", "git push origin +feat", "git push -u origin +HEAD:feat", 'git push origin "+feat"']) {
+    assert.equal(git(c, repoEnRama("feat")).code, 2, c);
+  }
+});
+
+test("git-safety bloquea push a main con opciones globales de git", () => {
+  for (const c of ["git -C . push origin main", "git -C x push origin HEAD:main", "git -c k=v push origin main", "git --no-pager push origin master"]) {
+    assert.equal(git(c, repoEnRama("feat")).code, 2, c);
+  }
+});
+
+test("git-safety bloquea commit -n (= --no-verify)", () => {
+  for (const c of ["git commit -n -m x", "git commit -m x -n", "git commit -nm x", "git commit -anm x", "git -C . commit -n -m x"]) {
+    assert.equal(git(c).code, 2, c);
+  }
+});
+
+test("git-safety bloquea restore y checkout que descartan todo", () => {
+  for (const c of ["git restore .", "git checkout .", "git restore -- .", "git restore --worktree .", "git checkout HEAD .", "git restore --source=HEAD~1 ."]) {
+    assert.equal(git(c).code, 2, c);
+  }
+});
+
+test("git-safety no bloquea lo legítimo", () => {
+  for (const c of ["git restore --staged file", "git restore --staged .", "git restore src/a.ts", "git checkout -b x", "git checkout feat",
+    'git commit -m "fix -n flag"', "git commit -mnote", "git commit --amend -m x", "git push origin feat", "git push -u origin feat",
+    "git -C x status", "git -c k=v push origin feat"]) {
+    assert.equal(git(c, repoEnRama("feat")).code, 0, c);
+  }
+});

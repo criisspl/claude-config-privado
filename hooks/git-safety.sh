@@ -10,58 +10,77 @@ command=$(echo "$input" | jq -r '.tool_input.command // ""')
 
 [[ -z "$command" ]] && exit 0
 
+# "git" + opciones globales (-C x, -c k=v, --no-pager, --git-dir x...) antes del subcomando
+G='git(\s+(-[Cc]\s+\S+|--(git-dir|work-tree|namespace|exec-path)(=\S+|\s+\S+)|--[a-z-]+(=\S+)?))*\s+'
+
+# Sin comillas: para no confundir mensajes de commit con opciones
+bare=$(echo "$command" | sed -E "s/'[^']*'|\"[^\"]*\"//g")
+
 # Block force-push to protected branches
-if echo "$command" | grep -qP 'git\s+push\s+.*(-f|--force)\s+.*\b(main|master|develop)\b'; then
+if echo "$command" | grep -qP "${G}push\\s+.*(-f|--force)\\s+.*\\b(main|master|develop)\\b"; then
   echo "Blocked: force push to protected branch (main/master/develop)" >&2
   exit 2
 fi
 # Block generic force push (catches: git push --force)
-if echo "$command" | grep -qP 'git\s+push\s+.*(-f|--force)'; then
+if echo "$command" | grep -qP "${G}push\\s+.*(-f|--force)"; then
   echo "Blocked: force push is not allowed" >&2
+  exit 2
+fi
+# Block force push con refspec + (git push origin +main)
+if echo "$command" | grep -qP "${G}push\\b[^;&|]*\\s[\"']?\\+[^\\s+]"; then
+  echo "Blocked: force push (refspec con +) is not allowed" >&2
   exit 2
 fi
 
 # Block hard reset
-if echo "$command" | grep -qP 'git\s+reset\s+--hard'; then
+if echo "$command" | grep -qP "${G}reset\\s+--hard"; then
   echo "Blocked: git reset --hard is not allowed" >&2
   exit 2
 fi
 
-# Block checkout to discard all changes
-if echo "$command" | grep -qP 'git\s+checkout\s+--\s+\.'; then
-  echo "Blocked: git checkout -- . discards all changes" >&2
+# Block checkout/restore to discard all changes (checkout -- ., checkout ., checkout HEAD ., restore .)
+if echo "$bare" | grep -qP "${G}checkout\\s+(\\S+\\s+)?(--\\s+)?\\.(\\s|\$|[;&|])"; then
+  echo "Blocked: git checkout . discards all changes" >&2
   exit 2
+fi
+if echo "$bare" | grep -qP "${G}restore\\s+(-\\S+\\s+)*(--\\s+)?\\.(\\s|\$|[;&|])"; then
+  # restore --staged . solo saca del stage; con --worktree/-W sí descarta
+  if ! echo "$bare" | grep -qP "${G}restore\\s.*(--staged|\\s-S\\b)" || echo "$bare" | grep -qP "${G}restore\\s.*(--worktree|\\s-W\\b)"; then
+    echo "Blocked: git restore . discards all changes" >&2
+    exit 2
+  fi
 fi
 
 # Block force clean
-if echo "$command" | grep -qP 'git\s+clean\s+.*-f'; then
+if echo "$command" | grep -qP "${G}clean\\s+.*-f"; then
   echo "Blocked: git clean -f is not allowed" >&2
   exit 2
 fi
 
 # Block deleting protected branches
-if echo "$command" | grep -qP 'git\s+branch\s+.*-[Dd]\s+\b(main|master|develop)\b'; then
+if echo "$command" | grep -qP "${G}branch\\s+.*-[Dd]\\s+\\b(main|master|develop)\\b"; then
   echo "Blocked: deleting protected branch (main/master/develop)" >&2
   exit 2
 fi
 
-# Sin comillas: para no confundir mensajes de commit con opciones
-bare=$(echo "$command" | sed -E "s/'[^']*'|\"[^\"]*\"//g")
-
-# Block commit --no-verify
-if echo "$bare" | grep -qP 'git\s+commit\s+.*--no-verify'; then
+# Block commit --no-verify y su forma corta -n (solo flags sueltos; -m/-F/-C/-c/-t llevan argumento)
+if echo "$bare" | grep -qP "${G}commit\\s+.*--no-verify"; then
   echo "Blocked: git commit --no-verify is not allowed" >&2
+  exit 2
+fi
+if echo "$bare" | grep -qP "${G}commit\\s+(.*\\s)?-[^\\s\\-mFCcSt]*n"; then
+  echo "Blocked: git commit -n (--no-verify) is not allowed" >&2
   exit 2
 fi
 
 # Block direct push to main/master (origin main, HEAD:main, x:main)
-if echo "$bare" | grep -qP 'git\s+push\b.*\s(\S+:)?(main|master)(\s|$|[;&|])'; then
+if echo "$bare" | grep -qP "${G}push\\b.*\\s(\\S+:)?(main|master)(\\s|\$|[;&|])"; then
   echo "Blocked: direct push to main/master (use a branch and a PR)" >&2
   exit 2
 fi
 # Block push without refspec while on main/master (git push, git push origin)
-if echo "$bare" | grep -qP 'git\s+push\b'; then
-  args=$(echo "$bare" | sed -E 's/.*git[[:space:]]+push//; s/[;&|].*//')
+if echo "$bare" | grep -qP "${G}push\\b"; then
+  args=$(echo "$bare" | sed -E 's/.*git[[:space:]].*push//; s/[;&|].*//')
   npos=0
   for a in $args; do [[ "$a" != -* ]] && npos=$((npos + 1)); done
   if [[ $npos -le 1 ]]; then
