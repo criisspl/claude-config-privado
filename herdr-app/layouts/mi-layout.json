@@ -220,6 +220,16 @@
                           "panel": true
                         }
                       }
+                    },
+                    {
+                      "id": "p-db",
+                      "type": "block",
+                      "content": {
+                        "mod": "mi-db-explorer",
+                        "props": {
+                          "panel": true
+                        }
+                      }
                     }
                   ],
                   "active": "files"
