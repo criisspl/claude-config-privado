@@ -6,6 +6,7 @@ Claude Code más seguro, más barato y más fácil de seguir:
 
 - **Seguro:** 16 hooks frenan force push, push a `main`, `rm -rf` peligrosos, secretos en el código y ediciones de configuración. Probados en CI contra un corpus de 309 casos.
 - **Barato:** cada tarea va al modelo más barato que la hace bien (Opus planifica, Sonnet implementa, Haiku lo mecánico) y cada PR dice cuánto costó.
+- **Auditoría:** `/auditar` saca las vulnerabilidades del proyecto (dependencias, código y secretos), propone el arreglo de cada una y Herdr las enseña en gráficas.
 - **Mejora sola:** `/retro` lee el gasto y los bloqueos de la semana y propone cambios a la config.
 - **Para el equipo:** se instala como plugin con un comando; las PRs se revisan solas en CI.
 
@@ -70,6 +71,7 @@ Paquetes disponibles: `typescript`, `zod`, `vitest`, `playwright`, `react`, `vit
 ## Medir y mejorar
 
 - `hooks/cost-report.sh` resume tokens y coste por semana; `--rama <r>` o `--jira <CLAVE>` da el coste de una rama o ticket (`1,1 M tokens · 3,16 $ · 93 % Sonnet`). `/preparar-pr` lo añade a la descripción.
+- `/auditar`: auditoría de seguridad del proyecto con arreglos propuestos; `--ci` falla con críticos nuevos. Detalle en [`docs/comandos.md`](docs/comandos.md).
 - `/retro`: retrospectiva semanal del gasto y de los bloqueos, con 3-5 cambios propuestos.
 - `.github/workflows/revisor-pr.yml`: revisa cada PR con el agente `revisor-pr` (necesita el secreto `ANTHROPIC_API_KEY`; sin él se salta).
 

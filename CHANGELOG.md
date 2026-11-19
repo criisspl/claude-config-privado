@@ -15,7 +15,8 @@ Cada versión publicada tiene su sección `## X.Y.Z`. Al subir `VERSION` en `mai
 - Coste: `cost-log` guarda la rama; `cost-report.sh --rama/--jira`; `/preparar-pr` añade el coste IA de la rama.
 - Skill nueva `/retro` y registro de bloqueos en `~/.cache/claude-guard/bloqueos.jsonl`.
 - Workflow `revisor-pr.yml`: revisión automática de PRs (necesita `ANTHROPIC_API_KEY`).
-- herdr-app: mod `mi-pendientes` (pendientes estilo Issues, paleta con `ctrl-shift-j`), ticket/rama/estado en pestañas y agentes, y marca de spaces personales.
+- Skill nueva `/auditar`: auditoría de seguridad del proyecto (npm audit, osv-scanner, semgrep, gitleaks) con arreglos propuestos, histórico y `--ci`.
+- herdr-app: mod `mi-pendientes` (pendientes estilo Issues, paleta con `ctrl-shift-j`), ticket/rama/estado en pestañas y agentes, marca de spaces personales, y mod `mi-auditoria` con gráficas de vulnerabilidades y pendiente `vulnerabilidad`.
 
 ## 1.5.0
 
