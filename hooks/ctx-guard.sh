@@ -7,6 +7,8 @@ input=$(cat)
 prompt=$(jq -r '.prompt // ""' <<<"$input")
 transcript=$(jq -r '.transcript_path // ""' <<<"$input")
 [[ "$prompt" =~ ^[[:space:]]*/(compact|clear) || ! -f "$transcript" ]] && exit 0
+# prompts automáticos (avisos de tareas en background y de subagentes): no se bloquean, o se corta al agente a mitad de trabajo
+[[ "$prompt" == "<task-notification"* || "$prompt" == "<agent-message"* ]] && exit 0
 
 # Solo cuenta respuestas posteriores al último compact: justo tras /compact el uso viejo seguiría ahí
 used=$(tail -n 400 "$transcript" | jq -rs '(map(.subtype=="compact_boundary" or .isCompactSummary==true) | rindex(true) // -1) as $i | .[$i+1:] | map(select(.type=="assistant" and .message.usage) | .message.usage | (.input_tokens + .cache_read_input_tokens + .cache_creation_input_tokens)) | last // 0' 2>/dev/null)
