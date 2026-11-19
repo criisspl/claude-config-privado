@@ -5,6 +5,7 @@
 
 set -euo pipefail
 
+command -v jq >/dev/null 2>&1 || { echo "Bloqueado: falta jq, el hook no puede comprobar nada (instálalo: apt/brew install jq)" >&2; exit 2; }
 input=$(cat)
 file_path=$(echo "$input" | jq -r '.tool_input.file_path // ""')
 content=$(echo "$input" | jq -r '.tool_input.content // .tool_input.new_string // ([.tool_input.edits[]?.new_string] | join("\n")) // ""')

@@ -4,6 +4,7 @@
 # No toca casos normales: rm -rf node_modules, dist, rutas concretas, worktrees, scratchpad.
 set -uo pipefail
 
+command -v jq >/dev/null 2>&1 || { echo "Bloqueado: falta jq, el hook no puede comprobar nada (instálalo: apt/brew install jq)" >&2; exit 2; }
 input=$(cat)
 command=$(jq -r '.tool_input.command // ""' <<<"$input")
 [[ -z "$command" ]] && exit 0

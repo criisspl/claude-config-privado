@@ -4,6 +4,7 @@
 # workflows de CI y vite.config.
 set -euo pipefail
 
+command -v jq >/dev/null 2>&1 || { echo "Bloqueado: falta jq, el hook no puede comprobar nada (instálalo: apt/brew install jq)" >&2; exit 2; }
 input=$(cat)
 file=$(echo "$input" | jq -r '.tool_input.file_path // ""')
 

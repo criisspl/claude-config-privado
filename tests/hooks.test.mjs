@@ -208,3 +208,17 @@ test("no-secret-leak deja pasar texto normal", () => {
     assert.equal(secreto("/p/src/a.ts", c).code, 0, c);
   }
 });
+
+test("hooks de bloqueo salen con 2 si falta jq", () => {
+  const bin = fs.mkdtempSync(path.join(os.tmpdir(), "nojq-"));
+  for (const c of ["bash", "cat", "grep", "sed", "tr", "dirname", "readlink", "git", "date", "mkdir", "basename"]) {
+    const p = spawnSync("which", [c], { encoding: "utf8" }).stdout.trim();
+    if (p) fs.symlinkSync(p, path.join(bin, c));
+  }
+  const bash = spawnSync("which", ["bash"], { encoding: "utf8" }).stdout.trim();
+  for (const h of ["git-safety", "no-secret-leak", "rm-safety", "protect-config", "read-guard", "no-screenshot-main"]) {
+    const r = spawnSync(bash, [path.join(HOOKS, `${h}.sh`)], { input: "{}", env: { PATH: bin, HOME: bin }, encoding: "utf8" });
+    assert.equal(r.status, 2, h);
+    assert.match(r.stderr, /jq/, h);
+  }
+});
