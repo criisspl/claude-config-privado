@@ -154,6 +154,14 @@ NUEVOS="$(jq -r --argjson prev "$PREV" '.hallazgos[] | select(.severidad=="criti
 mv "$T/ultima.json" "$OUT/ultima.json"
 jq -c '{ts, resumen, total:(.hallazgos|length)}' "$OUT/ultima.json" >>"$OUT/historial.jsonl"
 
+# Aviso para el panel de Herdr (Avisos): solo si hay críticas o altas; si ya no hay, se quita el anterior
+AVISO="$HOME/.local/state/avisos/auditoria-$(basename "$PROY").json"
+if [ "$(jq '.resumen.critica + .resumen.alta' "$OUT/ultima.json")" -gt 0 ]; then
+  mkdir -p "${AVISO%/*}" && jq -c '{title:"Auditoría de seguridad: \(.proyecto)", msg:"\(.resumen.critica) críticas y \(.resumen.alta) altas en \(.proyecto) (\(.rama)). Detalle: /auditar.", ts:(.ts|rtrimstr("Z")), toast:true}' "$OUT/ultima.json" >"$AVISO" 2>/dev/null
+else
+  rm -f "$AVISO"
+fi
+
 # .claude/auditoria/ fuera de git
 if ! grep -qxE '/?\.claude/auditoria/?' "$PROY/.gitignore" 2>/dev/null; then
   { [ -s "$PROY/.gitignore" ] && [ -n "$(tail -c1 "$PROY/.gitignore")" ] && echo; echo ".claude/auditoria/"; } >>"$PROY/.gitignore"
