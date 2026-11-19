@@ -6,6 +6,10 @@ Cada versión publicada tiene su sección `## X.Y.Z`. Al subir `VERSION` en `mai
 - **Menor** (1.1.0): paquetes o skills nuevos, reglas nuevas.
 - **Parche** (1.0.1): correcciones de texto o de errores.
 
+## 1.8.2
+
+- `git-safety`: analiza cada `push` por separado. Ya no bloquea `git push origin feature/x && git checkout main`; sí bloquea `push origin HEAD`, `@` y `x:refs/heads/main` desde main, y respeta `git -C` y `cd dir &&` para saber la rama.
+
 ## 1.8.1
 
 - `rm-safety`: bloquea también `rm -rf /usr/*`, `/etc/*` y `/home/usuario/*` (antes pasaban). La regla de Opus ya no pide ok previo.

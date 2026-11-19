@@ -38,6 +38,15 @@ test("git-safety deja pasar push a otras ramas", () => {
   assert.equal(git("git push -u origin feature/main-ajuste").code, 0);
 });
 
+test("git-safety analiza cada push por separado: sin falsos positivos y sin huecos", () => {
+  assert.equal(git("git push origin feature/x && git checkout main").code, 0);
+  assert.equal(git("git push -u origin feature/x && gh pr create --base master").code, 0);
+  assert.equal(git("git push origin HEAD", repoEnRama("main")).code, 2);
+  assert.equal(git("git push origin @", repoEnRama("main")).code, 2);
+  assert.equal(git("git push origin HEAD", repoEnRama("feature/x")).code, 0);
+  assert.equal(git("git push origin feature/x:refs/heads/main").code, 2);
+});
+
 test("git-safety bloquea commit --no-verify", () => {
   assert.equal(git("git commit --no-verify -m 'x'").code, 2);
   assert.equal(git("git commit -m 'x' --no-verify").code, 2);
