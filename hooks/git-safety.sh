@@ -45,4 +45,33 @@ if echo "$command" | grep -qP 'git\s+branch\s+.*-[Dd]\s+\b(main|master|develop)\
   exit 2
 fi
 
+# Sin comillas: para no confundir mensajes de commit con opciones
+bare=$(echo "$command" | sed -E "s/'[^']*'|\"[^\"]*\"//g")
+
+# Block commit --no-verify
+if echo "$bare" | grep -qP 'git\s+commit\s+.*--no-verify'; then
+  echo "Blocked: git commit --no-verify is not allowed" >&2
+  exit 2
+fi
+
+# Block direct push to main/master (origin main, HEAD:main, x:main)
+if echo "$bare" | grep -qP 'git\s+push\b.*\s(\S+:)?(main|master)(\s|$|[;&|])'; then
+  echo "Blocked: direct push to main/master (use a branch and a PR)" >&2
+  exit 2
+fi
+# Block push without refspec while on main/master (git push, git push origin)
+if echo "$bare" | grep -qP 'git\s+push\b'; then
+  args=$(echo "$bare" | sed -E 's/.*git[[:space:]]+push//; s/[;&|].*//')
+  npos=0
+  for a in $args; do [[ "$a" != -* ]] && npos=$((npos + 1)); done
+  if [[ $npos -le 1 ]]; then
+    case "$(git branch --show-current 2>/dev/null || true)" in
+      main|master)
+        echo "Blocked: git push from main/master (use a branch and a PR)" >&2
+        exit 2
+        ;;
+    esac
+  fi
+fi
+
 exit 0

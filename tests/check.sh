@@ -19,6 +19,13 @@ for f in "$REPO"/agents/*.md "$REPO"/skills/*/SKILL.md "$REPO"/packs/*/skills/*/
   case "$rel" in
     skills/* | packs/*/skills/*) [ "$nombre" = "$(basename "$(dirname "$f")")" ] || mal "$rel: name ($nombre) no coincide con la carpeta" ;;
   esac
+  # Campos opcionales con valores acotados
+  v="$(sed -n 's/^disable-model-invocation: *//p' <<<"$fm")"
+  [ -z "$v" ] || [[ "$v" =~ ^(true|false)$ ]] || mal "$rel: disable-model-invocation debe ser true o false ($v)"
+  v="$(sed -n 's/^maxTurns: *//p' <<<"$fm")"
+  [ -z "$v" ] || [[ "$v" =~ ^[0-9]+$ ]] || mal "$rel: maxTurns debe ser un número ($v)"
+  v="$(sed -n 's/^memory: *//p' <<<"$fm")"
+  [ -z "$v" ] || [[ "$v" =~ ^(user|project|local)$ ]] || mal "$rel: memory debe ser user, project o local ($v)"
 done
 
 # 2. settings.json

@@ -1,0 +1,5 @@
+# Plantilla de .rgignore: ripgrep (y por tanto Grep de Claude) se salta esto
+*.snap
+*.svg
+coverage/
+*.min.*
