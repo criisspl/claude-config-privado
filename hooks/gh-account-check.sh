@@ -31,6 +31,6 @@ ok=0
 
 echo "gh: cuenta activa $login, org del remote origin $org"
 if [[ $ok -eq 0 ]]; then
-  echo "AVISO: la cuenta gh ($login) no parece la de la org $org (cambia de cuenta con GH_CONFIG_DIR o permite el par con GH_ACCOUNT_MAP="org=login")."
+  echo "AVISO: la cuenta gh ($login) no parece la de la org $org (cambia de cuenta con GH_CONFIG_DIR o permite el par con GH_ACCOUNT_MAP=org=login)."
 fi
 exit 0
