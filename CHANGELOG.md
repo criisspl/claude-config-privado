@@ -6,6 +6,17 @@ Cada versión publicada tiene su sección `## X.Y.Z`. Al subir `VERSION` en `mai
 - **Menor** (1.1.0): paquetes o skills nuevos, reglas nuevas.
 - **Parche** (1.0.1): correcciones de texto o de errores.
 
+## 1.6.0
+
+- Plugins: `.claude-plugin/marketplace.json` con `guardas` (hooks) y `flujo` (agentes y skills), para instalar con `/plugin install` sin clonar (ver `docs/plugins.md`).
+- Seguridad: `git-safety` bloquea `+refspec`, `git -C x push origin main`, `commit -n`, `restore .`, `checkout .` y `clean -xfd`; `no-secret-leak` detecta claves de Anthropic, OpenAI, GitHub fine-grained y Slack (también en tests); `rm-safety` bloquea objetivos entrecomillados y directorios del sistema; los hooks de bloqueo fallan cerrado sin `jq`.
+- Red-team: `tests/redteam/` con 309 casos en CI. Shellcheck también sobre `hooks/` y `herdr-app/cw`.
+- Ajustes: `permissions.blockWritesOutsideWorkingDirectories` y `CLAUDE_CODE_SUBAGENT_EFFORT=medium`; `effort` explícito en todos los agentes.
+- Coste: `cost-log` guarda la rama; `cost-report.sh --rama/--jira`; `/preparar-pr` añade el coste IA de la rama.
+- Skill nueva `/retro` y registro de bloqueos en `~/.cache/claude-guard/bloqueos.jsonl`.
+- Workflow `revisor-pr.yml`: revisión automática de PRs (necesita `ANTHROPIC_API_KEY`).
+- herdr-app: mod `mi-pendientes` (pendientes estilo Issues, paleta con `ctrl-shift-j`), ticket/rama/estado en pestañas y agentes, y marca de spaces personales.
+
 ## 1.5.0
 
 - Hooks nuevos: `read-guard` (Read: bloquea lockfiles, `dist/` y `.next/`), `stop-guard` (Stop: avisa de `console.log`, `debugger`, `.only(` añadidos y de `package.json` sin lockfile; respeta `stop_hook_active`), `permission-readonly` (PermissionRequest: aprueba `gh`, `git`, `jq`, `rg` y `wc` de solo lectura, sin encadenados ni redirecciones) y `worktree-link` (SessionStart: enlaza `.claude/settings.local.json` y `.env.local` del repo principal en los worktrees). `gh-account-check` (SessionStart: muestra la cuenta gh activa y la org del remote, y avisa si no coinciden; solo informa).
