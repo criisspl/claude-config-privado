@@ -1,11 +1,27 @@
 # claude-config
 
-Librería de configuración de Claude Code, con versiones. Dos partes:
+[![CI](https://github.com/criisspl/claude-config/actions/workflows/ci.yml/badge.svg)](https://github.com/criisspl/claude-config/actions/workflows/ci.yml) [![Release](https://img.shields.io/github/v/release/criisspl/claude-config)](https://github.com/criisspl/claude-config/releases) ![Red-team](https://img.shields.io/badge/red--team-309%20casos%2C%200%20fugas-brightgreen)
 
-- **Global** (`install.sh`, una vez por máquina): reglas en `CLAUDE.md` para gastar menos tokens (`opusplan`, RTK, CodeGraph, headroom, caveman/ponytail), agentes `implementador` (sonnet), `mecanico` (haiku) y `experto` (opus), skills `grill-me` y `preparar-pr` (para revisar y limpiar se usan `/code-review` y `/simplify`, que vienen de serie), permisos y extras opcionales.
+Claude Code más seguro, más barato y más fácil de seguir:
+
+- **Seguro:** 16 hooks frenan force push, push a `main`, `rm -rf` peligrosos, secretos en el código y ediciones de configuración. Probados en CI contra un corpus de 309 casos.
+- **Barato:** cada tarea va al modelo más barato que la hace bien (Opus planifica, Sonnet implementa, Haiku lo mecánico) y cada PR dice cuánto costó.
+- **Auditoría:** `/auditar` saca las vulnerabilidades del proyecto (dependencias, código y secretos), propone el arreglo de cada una y Herdr las enseña en gráficas.
+- **Mejora sola:** `/retro` lee el gasto y los bloqueos de la semana y propone cambios a la config.
+- **Para el equipo:** se instala como plugin con un comando; las PRs se revisan solas en CI.
+
+```bash
+/plugin marketplace add criisspl/claude-config
+/plugin install guardas@criisspl    # hooks
+/plugin install flujo@criisspl      # agentes y skills
+```
+
+Más detalles de los plugins en [`docs/plugins.md`](docs/plugins.md). La instalación completa (reglas, permisos, paquetes por proyecto) sigue siendo con `install.sh`:
+
+- **Global** (`install.sh`, una vez por máquina): reglas en `CLAUDE.md` para gastar menos tokens (`opusplan`, RTK, CodeGraph, headroom, caveman/ponytail), agentes `implementador`, `revisor-pr` y `visual` (sonnet), `mecanico` y `buscador` (haiku) y `experto` (opus), skills `grill-me`, `preparar-pr`, `retro`, `pr-threads`, `jira-ac-check` y `small-safe-steps` (para revisar y limpiar se usan `/code-review` y `/simplify`, que vienen de serie), permisos y extras opcionales.
 - **Por proyecto** (comando `claude-config`): detecta la tecnología del proyecto e instala en su `.claude/` los paquetes que le tocan, con reglas, skills y agentes; `claude-config update` lo pone al día con la última versión.
 
-Opcional: `herdr-app/` guarda mi configuración de herdr-app (mods `mi-*`, ajustes, temas, layout y el script `cw`); se copia a `~/.config/herdr-app`.
+Opcional: `herdr-app/` guarda mi configuración de herdr-app (mods `mi-*`, ajustes, temas, layout y el script `cw`), con un panel de pendientes estilo GitHub Issues y paleta de comandos; ver [`herdr-app/README.md`](herdr-app/README.md).
 
 Sin nada de ninguna empresa.
 
@@ -17,7 +33,16 @@ git clone https://github.com/criisspl/claude-config.git ~/projects/claude-config
 CLAUDE_CONFIG_DIR=~/.claude-personal ~/projects/claude-config/install.sh   # en otro directorio
 ```
 
-Hooks: `opus-watch` (avisa si la sesión va en Opus fuera de plan mode), `git-safety` (bloquea force push, `reset --hard`, `clean -f`), `no-secret-leak` (bloquea escribir claves), `ctx-guard` (bloquea el prompt si el contexto pasa de 140k tokens), `compact-reinject` (tras compactar, reinyecta el primer y el último prompt) y `no-screenshot-main` (sin capturas de Chrome DevTools en el hilo principal). Explicación en [`rules/`](rules/). `syncClaudeAiPlugins: false` para no cargar los plugins de claude.ai en cada sesión.
+Hooks (detalle en [`rules/`](rules/)):
+
+| Para qué | Hooks |
+| --- | --- |
+| Git y borrados | `git-safety` (force push, push a `main`, `reset --hard`, `restore .`, `clean -f`, `--no-verify`), `rm-safety` (`rm -rf` sobre `/`, `~`, directorios del sistema; `DROP`/`TRUNCATE`) |
+| Secretos y config | `no-secret-leak` (claves AWS, GitHub, Anthropic, OpenAI, Slack, privadas), `protect-config` (eslint, tsconfig, configs de tests), `read-guard` (lockfiles, `dist/`, `.next/`) |
+| Contexto y modelo | `ctx-guard` (para por encima de 140k tokens), `compact-reinject`, `opus-watch`, `no-screenshot-main`, `memory-lint` |
+| Sesión | `permission-readonly` (aprueba `gh`/`git` de solo lectura), `worktree-link`, `gh-account-check`, `stop-guard` (`console.log`, `.only(`), `cost-log`, `oficina-subagent` |
+
+Los hooks de bloqueo fallan cerrado si falta `jq`. La CI los pasa contra [`tests/redteam/`](tests/redteam/). `syncClaudeAiPlugins: false` para no cargar los plugins de claude.ai en cada sesión.
 
 `CLAUDE.md`, `RTK.md`, los agentes, las skills y los hooks quedan enlazados al repo. Para ponerlo todo al día: `claude-config update` (desde cualquier carpeta; dentro de un proyecto, actualiza también sus paquetes). `settings.json` se fusiona (con copia de seguridad) e incluye permisos para comandos de solo lectura, tests, lint y build, sin pedir confirmación; `git push` pregunta y `git push --force` y leer `.env` están bloqueados.
 
@@ -42,6 +67,13 @@ claude-config update    # más adelante: baja la última versión y actualiza
 ```
 
 Paquetes disponibles: `typescript`, `zod`, `vitest`, `playwright`, `react`, `vite`, `tailwind`, `nextjs`, `svelte`, `supabase`, `cloudflare-workers` e `indexeddb`. Cómo funcionan, todos los comandos y cómo crear uno nuevo (Java, Go, Python, PHP…): [`docs/paquetes.md`](docs/paquetes.md).
+
+## Medir y mejorar
+
+- `hooks/cost-report.sh` resume tokens y coste por semana; `--rama <r>` o `--jira <CLAVE>` da el coste de una rama o ticket (`1,1 M tokens · 3,16 $ · 93 % Sonnet`). `/preparar-pr` lo añade a la descripción.
+- `/auditar`: auditoría de seguridad del proyecto con arreglos propuestos; `--ci` falla con críticos nuevos. Detalle en [`docs/comandos.md`](docs/comandos.md).
+- `/retro`: retrospectiva semanal del gasto y de los bloqueos, con 3-5 cambios propuestos.
+- `.github/workflows/revisor-pr.yml`: revisa cada PR con el agente `revisor-pr` (necesita el secreto `ANTHROPIC_API_KEY`; sin él se salta).
 
 ## Versiones
 
