@@ -24,7 +24,7 @@ reason=""
 stripped=$(sed -E "s/(-[a-zA-Z]*[mb]|--message|--body|--title)(=|[[:space:]]+)(\"[^\"]*\"|'[^']*')//g" <<<"$command")
 # rm recursivo (-r/-R/--recursive, solo o combinado con -f) contra un objetivo peligroso
 # Objetivo peligroso: /, /*, ~, ~/, ~/*, $HOME|${HOME} (con / y * opcionales, con o sin comillas), /home, /home/user, directorios del sistema (/usr, /etc, /var, /bin, /sbin, /lib, /opt, /boot, /Users, /System, /Library, /Applications), ., .., *
-TARGET='["'"'"']?(?:(?:/|~/?|\$HOME|\$\{HOME\})["'"'"']?/?\*?|/home|/home/[^/\s]+/?|/(?:usr|etc|var|bin|sbin|lib|opt|boot|Users|System|Library|Applications)/?|\.\.?/?\*?|\*)["'"'"']?'
+TARGET='["'"'"']?(?:(?:/|~/?|\$HOME|\$\{HOME\})["'"'"']?/?\*?|/home|/home/[^/\s]+/?\*?|/(?:usr|etc|var|bin|sbin|lib|opt|boot|Users|System|Library|Applications)/?\*?|\.\.?/?\*?|\*)["'"'"']?'
 # rm como comando: rm, /bin/rm, \rm
 RM='(^|[;&|(\s])(?:\S*/|\\)?rm'
 if grep -qP "${RM}"'\s+(?:-[a-zA-Z-]+\s+)*(?:-[a-zA-Z]*[rR][a-zA-Z]*|--recursive)\s+(?:-[a-zA-Z-]+\s+)*(?:--\s+)?'"${TARGET}"'(?=\s|$|[;&|)])' <<<"$command"; then

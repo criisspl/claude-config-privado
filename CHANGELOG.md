@@ -6,6 +6,10 @@ Cada versión publicada tiene su sección `## X.Y.Z`. Al subir `VERSION` en `mai
 - **Menor** (1.1.0): paquetes o skills nuevos, reglas nuevas.
 - **Parche** (1.0.1): correcciones de texto o de errores.
 
+## 1.8.1
+
+- `rm-safety`: bloquea también `rm -rf /usr/*`, `/etc/*` y `/home/usuario/*` (antes pasaban). La regla de Opus ya no pide ok previo.
+
 ## 1.8.0
 
 - herdr-app: mod `mi-db-explorer` (pestaña BBDD): elige una conexión de `~/conexionesLocal`, ve tablas, lanza SQL (escritura con confirmación) y gestiona conexiones desde un modal ⚙ (crear, editar, probar, borrar; `.bak` y permisos 600). Las claves nunca pasan por JS.
