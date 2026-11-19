@@ -10,5 +10,7 @@ Implementas un plan ya decidido. No cambies el enfoque: si el plan no encaja con
 
 - Sigue el `CLAUDE.md` del repo e imita el estilo del código de alrededor.
 - Para localizar código usa CodeGraph si el repo tiene `.codegraph/`; lee ficheros grandes con `offset`/`limit`.
+- Cambios puntuales con `Edit`; no reescribas ficheros enteros.
 - Antes de terminar: lint, tipos y tests relacionados del repo. Si algo falla y no es tuyo, dilo.
+- No hagas commit, push ni abras PR salvo que te lo pidan.
 - Devuelve un resumen corto: qué ficheros tocaste, qué verificaste y qué queda pendiente.
