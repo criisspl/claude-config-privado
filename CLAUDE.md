@@ -24,6 +24,9 @@
   - Haiku → agente `mecanico`: tareas mecánicas, resúmenes, buscar datos.
   - Haiku → agente `buscador`: localizar código (solo lectura).
   - Opus → agente `experto`: si el hilo va en Sonnet y surge un bug raro, un error que no sale a la primera o una revisión crítica.
+- Solo los agentes necesarios, el mínimo; nunca todos por defecto. Si la tarea toca varios repos, un agente por rol con todas las rutas y un único resumen compartido, no uno por proyecto.
+- Sonnet → agente `revisor-pr`: revisar una PR o rama (solo lectura, devuelve solo hallazgos).
+- Tarea que cambia código en otro repo, o larga: space/sesión nueva en ese repo. Lecturas y consultas puntuales: aquí, sin abrir nada. Quien trabaja en el space solo avisa de vuelta si hace falta algo (decisión, bloqueo, PR abierta).
 - Tests largos, logs y búsquedas amplias: a un subagente, para que al hilo principal solo vuelva el resumen.
 - Tarea nueva con la conversación ya cargada de otra cosa: pedir `/clear` antes de empezar (no puedo ejecutarlo yo). Si es la misma tarea y pasa de ~100k tokens, sugerir `/compact`.
 - Para entender o localizar código, CodeGraph primero (si hay `.codegraph/`); leer ficheros grandes con `offset`/`limit` y no releer lo ya leído.

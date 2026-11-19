@@ -1,0 +1,175 @@
+#!/usr/bin/env bash
+# cw — abre un workspace de Herdr con un agente (Claude por defecto).
+# Los tickets salen en Spaces como worktree hijo de su repo, y Claude arranca leyendo el ticket.
+#
+#   cw                          # Claude aquí mismo, para consultar cualquier cosa
+#   cw tilt                     # Claude en ~/projects/tilt (sin worktree)
+#   cw PROJ-211                  # worktree feature/PROJ-211 del repo actual (o el repo por defecto)
+#   cw PROJ-211 -b               #   … con rama bugfix/PROJ-211
+#   cw PROJ-211 -r calendar-ui   #   … en otro repo
+#   cw -w prueba-fuente         # worktree con nombre libre (rama feature/prueba-fuente)
+#   cw tilt -a codex            # otro agente: claude, codex, gemini, cursor
+#   cw tilt -t                  # solo terminal, sin agente
+#   cw PROJ-211 -p               # solo crea el worktree e imprime su ruta
+#   cw mi-proyecto -P           # con la cuenta personal (workspace «me · …»: Claude y GitHub personales)
+#
+# Los worktrees van en ~/projects/<repo>-<TICKET> (como mi-repo-PROJ-211).
+# Si la rama ya existe la reutiliza; si el worktree ya existe, solo lo abre.
+set -euo pipefail
+
+usage() { awk 'NR>1 && !/^#/{exit} NR>1' "$0" | sed 's/^# \{0,1\}//'; exit 1; }
+
+target="" wt="" prefix=feature repo="" agent=claude print=0 personal=0
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -h|--help) usage ;;
+    -b|--bugfix) prefix=bugfix ;;
+    -r|--repo) repo="$2"; shift ;;
+    -w|--worktree) wt="$2"; shift ;;
+    -a|--agent) agent="$2"; shift ;;
+    -t|--terminal) agent="" ;;
+    -p|--print) print=1 ;;
+    -P|--personal) personal=1 ;;
+    -*) usage ;;
+    *) [[ -z "$target" ]] || usage; target="$1" ;;
+  esac
+  shift
+done
+
+# Un ticket (ABC-123) abre worktree; otro nombre se trata como repo o carpeta
+if [[ -n "$target" && "$target" =~ ^[A-Za-z][A-Za-z0-9]*-[0-9]+$ ]]; then
+  wt="$target"
+elif [[ -n "$target" ]]; then
+  repo="$target"
+fi
+
+case "$agent" in cursor) agent=cursor-agent ;; esac
+[[ -z "$agent" ]] || command -v "$agent" >/dev/null || { echo "No tienes '$agent' instalado." >&2; exit 1; }
+
+resolve_dir() {  # repo por nombre, ruta o el actual
+  local r="$1"
+  if [[ -z "$r" ]]; then pwd
+  elif [[ -d "$r" ]]; then (cd "$r" && pwd)
+  elif [[ -d "$HOME/projects/$r" ]]; then echo "$HOME/projects/$r"
+  else echo "No encuentro '$r' (ni como ruta ni en ~/projects)." >&2; exit 1
+  fi
+}
+
+dir=$(resolve_dir "$repo")
+title=$(basename "$dir")
+
+if [[ -n "$wt" ]]; then
+  if common=$(git -C "$dir" rev-parse --path-format=absolute --git-common-dir 2>/dev/null); then
+    main=$(dirname "$common")
+  elif [[ -z "$repo" ]]; then
+    main="$HOME/projects/mi-repo"
+  else
+    echo "No es un repo git: $dir" >&2; exit 1
+  fi
+
+  if [[ "$wt" =~ ^[A-Za-z][A-Za-z0-9]*-[0-9]+$ ]]; then
+    name=$(tr '[:lower:]' '[:upper:]' <<<"$wt")
+  else
+    name="$wt"
+  fi
+  branch="$prefix/$name"
+  # Si la rama ya tiene worktree (con cualquier nombre de carpeta), se reutiliza
+  existing=$(git -C "$main" worktree list --porcelain | awk -v b="refs/heads/$branch" '/^worktree /{w=substr($0,10)} $0=="branch "b{print w}')
+  dir=${existing:-"$(dirname "$main")/$(basename "$main")-$name"}
+  title="$name"
+
+  if [[ ! -d "$dir" ]]; then
+    git -C "$main" fetch -q origin
+    base=$(git -C "$main" symbolic-ref -q --short refs/remotes/origin/HEAD || echo origin/master)
+    if git -C "$main" show-ref -q --verify "refs/heads/$branch"; then
+      git -C "$main" worktree add "$dir" "$branch"
+    elif git -C "$main" show-ref -q --verify "refs/remotes/origin/$branch"; then
+      git -C "$main" worktree add --track -b "$branch" "$dir" "origin/$branch"
+    else
+      git -C "$main" worktree add --no-track -b "$branch" "$dir" "$base"
+    fi
+    # .env* locales que no están en git
+    for f in "$main"/.env*; do [[ -f "$f" && ! -e "$dir/$(basename "$f")" ]] && cp "$f" "$dir/"; done
+    for f in .npmrc .claude/settings.local.json; do [[ -f "$main/$f" && ! -e "$dir/$f" ]] && mkdir -p "$(dirname "$dir/$f")" && cp "$main/$f" "$dir/$f"; done
+    echo "Worktree: $dir ($branch)" >&2
+  fi
+
+  # Dependencias propias del worktree, en segundo plano (pnpm enlaza desde su store, es rápido)
+  if [[ -f "$dir/package.json" && ! -d "$dir/node_modules" ]]; then
+    if [[ -f "$dir/pnpm-lock.yaml" ]]; then pm="pnpm install --frozen-lockfile --prefer-offline"
+    elif [[ -f "$dir/yarn.lock" ]]; then pm="yarn install --frozen-lockfile"
+    else pm="npm ci"; fi
+    log="$HOME/.cache/cw/$(basename "$dir")-install.log"
+    mkdir -p "${log%/*}"
+    (cd "$dir" && nohup bash -lc "$pm" >"$log" 2>&1 &)
+    echo "Instalando dependencias en segundo plano ($pm) → $log" >&2
+  fi
+fi
+
+[[ $print == 1 ]] && { echo "$dir"; exit 0; }
+
+[[ -n "$agent" && "$agent" != claude ]] && title="$title · ${agent%-agent}"
+# «me · …» hace que ~/.bashrc active la cuenta personal de Claude y GitHub en ese workspace
+if [[ $personal == 1 ]]; then
+  title="me · $title"
+  export CLAUDE_CONFIG_DIR=$HOME/.claude-personal GH_CONFIG_DIR=$HOME/.config/gh-personal GIT_CONFIG_GLOBAL=$HOME/.gitconfig-personal
+else
+  # Sin -P, siempre trabajo, aunque se lance desde el workspace «me»
+  unset CLAUDE_CONFIG_DIR GH_CONFIG_DIR GIT_CONFIG_GLOBAL
+fi
+
+# Marca la carpeta como de confianza para Claude (así no pregunta al abrir); respeta la cuenta personal
+if [[ "$agent" == claude ]]; then
+  cj="${CLAUDE_CONFIG_DIR:-$HOME}/.claude.json"
+  # (histórico) ccr-work usaba ~/.claude/.claude.json: se marca también ahí
+  if [[ -z "${CLAUDE_CONFIG_DIR:-}" && -f "$HOME/.claude/.claude.json" ]]; then
+    wj="$HOME/.claude/.claude.json"
+    jq --arg d "$dir" '.projects[$d].hasTrustDialogAccepted = true' "$wj" >"$wj.cw.$$" && cat "$wj.cw.$$" >"$wj"; rm -f "$wj.cw.$$"
+  fi
+  [[ -f "$cj" ]] && jq --arg d "$dir" '.projects[$d].hasTrustDialogAccepted = true' "$cj" >"$cj.cw.$$" \
+    && mv "$cj.cw.$$" "$cj" || rm -f "$cj.cw.$$"
+fi
+
+# Prompt inicial: con ticket, Claude empieza leyendo Jira y proponiendo plan
+prompt=""
+if [[ "$agent" == claude && -n "${name:-}" && "$name" =~ ^[A-Z][A-Z0-9]*-[0-9]+$ ]]; then
+  prompt="Ticket $name (rama $branch). Lee el ticket en Jira (descripción, criterios de aceptación, plan y comentarios) y dame un resumen corto y tu plan antes de tocar código."
+fi
+
+prompt=${CW_PROMPT:-$prompt}  # el panel pasa su propio prompt
+
+if [[ -n "${HC_TERMINAL_ID:-}" && -z "${HERDR_ENV:-}" ]] && command -v herdr-app >/dev/null; then
+  # herdr-app: el space se crea con `space.new`; los worktrees los anida la app bajo su repo.
+  sp=$(herdr-app ls 2>/dev/null | jq -r --arg n "$title" '.spaces[]|select(.name==$n)|.id' | head -1)
+  if [[ -n "$sp" ]]; then
+    herdr-app do space.select "$(jq -nc --arg id "$sp" '{id:$id}')" >/dev/null
+    echo "Ya estaba abierto: $title" >&2
+  else
+    [[ -n "$agent" && -n "$prompt" ]] && prompt="$prompt Al terminar, avisa a la sesión de origen con: hc send $HC_TERMINAL_ID 'TERMINADO $title: <resumen corto>' SOLO si necesita algo (decisión, bloqueo, PR abierta, resultado del que dependa otro paso); si no, no avisas. Actualiza tú artifact/Jira/Confluence si hace falta. Usa el mínimo de agentes, uno por rol aunque toques varios repos."
+    # El space lo lanza la app (bash -lc, no interactivo): no hereda el export de arriba, así que la cuenta va en el propio comando
+    envp=""
+    [[ $personal == 1 ]] && envp="env CLAUDE_CONFIG_DIR=$CLAUDE_CONFIG_DIR GH_CONFIG_DIR=$GH_CONFIG_DIR GIT_CONFIG_GLOBAL=$GIT_CONFIG_GLOBAL "
+    cmd="${agent:+$envp$agent${prompt:+ $(printf '%q' "$prompt")}; }exec bash"
+    herdr-app do space.new "$(jq -nc --arg n "$title" --arg f "$dir" --arg c "$cmd" '{name:$n,folder:$f,focus:true,argv:["bash","-lc",$c]}')" >/dev/null
+  fi
+elif [[ -n "${HERDR_ENV:-}" ]] && command -v herdr >/dev/null; then
+  if [[ -n "$wt" ]]; then
+    out=$(herdr worktree open --cwd "$main" --path "$dir" --label "$title" --focus --trust-repository)
+  else
+    out=$(herdr workspace create --cwd "$dir" --label "$title" --focus)
+  fi
+  pane=$(jq -r '.result.root_pane.pane_id // .result.workspace.active_tab_id // empty' <<<"$out")
+  [[ "$pane" == *:t* ]] && pane=$(herdr pane list | jq -r --arg t "$pane" '.result.panes[]|select(.tab_id==$t)|.pane_id' | head -1)
+  if [[ "$(jq -r '.result.already_open // false' <<<"$out")" == true ]]; then
+    echo "Ya estaba abierto: $title" >&2
+  elif [[ -n "$agent" && -n "$pane" ]]; then
+    kind=${agent%-agent}
+    # Claude tarda en arrancar con hooks y MCPs: margen amplio, y si ya está vivo no se reenvía nada
+    herdr agent start "$kind" --kind "$kind" --pane "$pane" --timeout 120000 ${prompt:+-- "$prompt"} >/dev/null 2>&1 \
+      || herdr pane get "$pane" | jq -e '.result.pane.agent' >/dev/null \
+      || herdr pane send-text "$pane" "$agent"$'\n'
+  fi
+else
+  cmd="${agent:+$agent${prompt:+ $(printf '%q' "$prompt")}; }exec bash"
+  cd "$dir" && exec bash -lc "$cmd"
+fi

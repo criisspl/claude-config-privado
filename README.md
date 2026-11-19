@@ -5,6 +5,8 @@ Librería de configuración de Claude Code, con versiones. Dos partes:
 - **Global** (`install.sh`, una vez por máquina): reglas en `CLAUDE.md` para gastar menos tokens (`opusplan`, RTK, CodeGraph, headroom, caveman/ponytail), agentes `implementador` (sonnet), `mecanico` (haiku) y `experto` (opus), skills `grill-me` y `preparar-pr` (para revisar y limpiar se usan `/code-review` y `/simplify`, que vienen de serie), permisos y extras opcionales.
 - **Por proyecto** (comando `claude-config`): detecta la tecnología del proyecto e instala en su `.claude/` los paquetes que le tocan, con reglas, skills y agentes; `claude-config update` lo pone al día con la última versión.
 
+Opcional: `herdr-app/` guarda mi configuración de herdr-app (mods `mi-*`, ajustes, temas, layout y el script `cw`); se copia a `~/.config/herdr-app`.
+
 Sin nada de ninguna empresa.
 
 ## Instalar

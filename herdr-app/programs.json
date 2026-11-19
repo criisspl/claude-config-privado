@@ -1,0 +1,6 @@
+{ "programs": {
+    "tilt":       { "name": "Tilt",       "icon": ".config/herdr-app/my-icons/tilt.svg",       "tint": true, "tile": "#3a4157", "color": "#c9a7ff" },
+    "playwright": { "name": "Playwright", "icon": ".config/herdr-app/my-icons/playwright.svg", "tint": true, "tile": "#3a4157", "color": "#7ccb8b" },
+    "storybook":  { "name": "Storybook",  "icon": ".config/herdr-app/my-icons/storybook.svg",  "tint": true, "tile": "#3a4157", "color": "#ff8fa8" },
+    "tailwindcss":{ "name": "Tailwind",   "icon": ".config/herdr-app/my-icons/tailwind.svg",   "tint": true, "tile": "#3a4157", "color": "#7be8dc", "match": ["tailwind"] }
+} }

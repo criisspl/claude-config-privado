@@ -13,11 +13,13 @@ Cada versión publicada tiene su sección `## X.Y.Z`. Al subir `VERSION` en `mai
 - Agente nuevo `visual` con `mcpServers: [figma]`.
 - `tests/check.sh` valida `disable-model-invocation`, `maxTurns` y `memory`.
 - Plantillas: regla de ejemplo con `paths:` y `.rgignore` (ver `docs/plantillas.md`).
+- `git-safety`: bloquea el push directo a `main`/`master` (`origin main`, `HEAD:main`, y `git push` sin refspec estando en `main`) y `git commit --no-verify`.
+- Hook nuevo `protect-config` (Edit|Write): bloquea editar `.eslintrc*`, `tsconfig*.json`, `jest.config.*` y `vitest.config.*`; pide confirmación en `package.json`, `.github/workflows/*` y `vite.config.*`.
 
 ## 1.4.0
 
-- `git-safety`: bloquea el push directo a `main`/`master` (`origin main`, `HEAD:main`, y `git push` sin refspec estando en `main`) y `git commit --no-verify`.
-- Hook nuevo `protect-config` (Edit|Write): bloquea editar `.eslintrc*`, `tsconfig*.json`, `jest.config.*` y `vitest.config.*`; pide confirmación en `package.json`, `.github/workflows/*` y `vite.config.*`.
+- Agente `revisor-pr` (Sonnet, solo lectura) y reglas de enrutado: mínimo de agentes, uno por rol aunque la tarea toque varios repos, sesión nueva solo si cambia código en otro repo.
+- `herdr-app/`: mi configuración de herdr-app (mods `mi-*` de tabs, spaces, agentes, oficina comecocos, barra de uso y toasts; ajustes, atajos, temas y layout) y el script `cw`. Se copia a mano a `~/.config/herdr-app`.
 
 ## 1.3.0
 
