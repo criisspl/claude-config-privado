@@ -80,23 +80,36 @@ if echo "$bare" | grep -qP "${G}commit\\s+(.*\\s)?-[^\\s\\-mFCcSt]*n"; then
   exit 2
 fi
 
-# Block direct push to main/master (origin main, HEAD:main, x:main)
-if echo "$bare" | grep -qP "${G}push\\b.*\\s(\\S+:)?(main|master)(\\s|\$|[;&|])"; then
-  echo "Blocked: direct push to main/master (use a branch and a PR)" >&2
-  exit 2
-fi
-# Block push without refspec while on main/master (git push, git push origin)
-if echo "$bare" | grep -qP "${G}push\\b"; then
-  args=$(echo "$bare" | sed -E 's/.*git[[:space:]].*push//; s/[;&|].*//')
-  npos=0
-  for a in $args; do [[ "$a" != -* ]] && npos=$((npos + 1)); done
-  if [[ $npos -le 1 ]]; then
-    case "$(git branch --show-current 2>/dev/null || true)" in
-      main|master)
-        echo "Blocked: git push from main/master (use a branch and a PR)" >&2
-        exit 2
-        ;;
-    esac
+# Cada push por separado (cortado en | & ;) para que un "git checkout main" posterior no cuente
+pushes=$(echo "$bare" | sed -E 's/[0-9]*>&[0-9-]+//g' | grep -oP "${G}push\\b[^|&;]*" || true)
+if [[ -n "$pushes" ]]; then
+  # Refspec explícito a main/master (origin main, HEAD:main, x:refs/heads/main)
+  if echo "$pushes" | grep -qP "${G}push\\b.*\\s([^\\s:]*:)?(refs/heads/)?(main|master)(\\s|\$)"; then
+    echo "Blocked: direct push to main/master (use a branch and a PR)" >&2
+    exit 2
+  fi
+  # Sin refspec (git push, git push origin) o con HEAD/@: depende de la rama actual
+  need_branch=0
+  while IFS= read -r seg; do
+    args=$(echo "${seg#*push}" | tr ' ' '\n' | grep -v '^-' | grep . || true)
+    pos=$(echo "$args" | grep -c . || true)
+    ref=$(echo "$args" | sed -n 2p)
+    if [[ "$pos" -le 1 || "$ref" == "HEAD" || "$ref" == "@" ]]; then need_branch=1; fi
+  done <<< "$pushes"
+  if [[ "$need_branch" -eq 1 ]]; then
+    # Rama del repo donde se hace el push de verdad: respeta "git -C <dir>" y "cd <dir> &&"
+    dir=$(echo "$bare" | grep -oP "${G}(?=push\\b)" | head -1 | sed -nE 's/.*\s-C\s+(\S+)\s.*/\1/p')
+    [[ -z "$dir" ]] && dir=$(echo "$command" | sed -nE 's/.*\bcd\s+("([^"]*)"|'"'"'([^'"'"']*)'"'"'|([^[:space:];&|]+))\s*(&&|;).*push\b.*/\2\3\4/p')
+    dir="${dir/#\~/$HOME}"
+    if [[ -n "$dir" ]]; then
+      branch=$(git -C "$dir" symbolic-ref --short HEAD 2>/dev/null || true)
+    else
+      branch=$(git symbolic-ref --short HEAD 2>/dev/null || true)
+    fi
+    if [[ "$branch" == "main" || "$branch" == "master" ]]; then
+      echo "Blocked: git push from main/master (use a branch and a PR)" >&2
+      exit 2
+    fi
   fi
 fi
 
