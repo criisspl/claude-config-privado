@@ -268,3 +268,26 @@ test("db-visor solo guarda comandos que ejecutan mysql/psql/sqlite3, no los que 
     assert.equal(fs.existsSync(fichero), true, c);
   }
 });
+
+const ctx = (prompt, tokens = 150000) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "ctx-"));
+  const t = path.join(dir, "t.jsonl");
+  fs.writeFileSync(t, JSON.stringify({ type: "assistant", message: { usage: { input_tokens: tokens, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 } } }) + "\n");
+  const r = spawnSync("bash", [path.join(HOOKS, "ctx-guard.sh")], { input: JSON.stringify({ prompt, transcript_path: t }), encoding: "utf8" });
+  return r.stdout;
+};
+
+test("ctx-guard bloquea el prompt escrito a mano pasado el límite", () => {
+  assert.equal(JSON.parse(ctx("sigue")).decision, "block");
+  assert.equal(JSON.parse(ctx("mira el <task-notification> de antes")).decision, "block");
+});
+
+test("ctx-guard no corta avisos automáticos de tareas ni de subagentes", () => {
+  assert.equal(ctx("<task-notification>\n<task-id>x</task-id>"), "");
+  assert.equal(ctx('<agent-message from="a1">\n[Subagent hand-back] ok'), "");
+});
+
+test("ctx-guard deja pasar /clear y no bloquea bajo el límite", () => {
+  assert.equal(ctx("/clear"), "");
+  assert.equal(ctx("sigue", 50000), "");
+});
