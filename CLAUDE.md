@@ -32,3 +32,7 @@
 - Para entender o localizar código, CodeGraph primero (si hay `.codegraph/`); leer ficheros grandes con `offset`/`limit` y no releer lo ya leído.
 
 @RTK.md
+
+# Mis issues personales
+
+"Mis issues" = pendientes personales de Cristina en el mod `mi-issues` de herdr-app (`~/.config/herdr-app/pendientes.json`). No son tickets de Jira. Si dice «apunta en mis issues» o «qué tengo en mis issues», leer o editar ese fichero; no crear ni consultar Jira.

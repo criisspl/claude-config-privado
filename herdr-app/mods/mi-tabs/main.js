@@ -146,9 +146,9 @@ export default class Tabs extends View {
       ? Math.max(10, (root.traffic_lights[0] + 64) / settings().zoom - (sidebar?.hidden ? 0 : sidebar?.size?.px ?? 0))
       : 10;
     const panel = find(root, "panel"), body = find(root, "panel-body");
-    const enabled = [...(shared("workspace.panels") ?? ["files", "changes"]), "pull-requests"];
+    const enabled = [...(shared("workspace.panels") ?? ["files", "changes"]), "pull-requests", "p-avisos", "p-issues"];
     this.syncPanel(space, panel, body, enabled);
-    const panelButton = (id, label, icon) => {
+    const panelButton = (id, label, icon, n = 0) => {
       const on = panel && !panel.hidden && body?.active === id;
       return h_flex().id(`panel-${id}`).h(26).px(8).gap(5).flex_none().items_center().rounded(6)
         .text_size(13).bg(on ? t.selected : t.chrome).text_color(on ? t.foreground : t.muted)
@@ -156,7 +156,7 @@ export default class Tabs extends View {
         .on_click(() => {
           if (on) run("layout.hide", { id: "panel" });
           else { run("layout.select", { stack: "panel-body", child: id }); run("layout.show", { id: "panel" }); }
-        }).child(svg(icon).size(14)).child(label);
+        }).child(svg(icon).size(14)).child(n > 0 ? `${label} ${n}` : label);
     };
     // "⚠ N bloqueado(s)": agentes en blocked de cualquier space; el clic salta al primero. Badge del icono con N.
     let blocked = [];
@@ -178,6 +178,8 @@ export default class Tabs extends View {
       .when(enabled.includes("files"), el => el.child(panelButton("files", "Files", "mods/files/file.svg")))
       .when(enabled.includes("changes"), el => el.child(panelButton("changes", "Changes", "mods/changes/changes.svg")))
       .child(panelButton("pull-requests", "PRs", "mods/branch-pr/icons/pull-request.svg"))
+      .child(panelButton("p-avisos", "Avisos", "mods/mi-spaces/icons/mail.svg", Number(shared("avisos.n") ?? 0)))
+      .child(panelButton("p-issues", "Issues", "mods/mi-spaces/icons/ticket.svg", (shared("pendientes.items") ?? []).filter((i) => !i.cerrado).length))
       .when(w?.buttons, el => el.child(button("minimize", w.platform === "windows" ? svg("mods/tabs/win-min.svg").size(16) : "−", () => run("window.minimize")))
         .child(button("maximize", w.platform === "windows" ? svg(`mods/tabs/${w.maximized ? "win-restore" : "win-max"}.svg`).size(16) : "□", () => run("window.maximize")))
         .child(button("close-window", w.platform === "windows" ? svg("mods/tabs/win-close.svg").size(16) : svg("mods/pane/close.svg").size(13), () => run("window.close"))));

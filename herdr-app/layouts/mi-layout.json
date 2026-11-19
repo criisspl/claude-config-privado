@@ -51,6 +51,16 @@
               "min": 90
             },
             {
+              "id": "avisos",
+              "type": "block",
+              "content": {
+                "mod": "mis-avisos"
+              },
+              "size": {
+                "px": 0
+              }
+            },
+            {
               "id": "panel-resumen",
               "type": "block",
               "size": {
@@ -117,33 +127,50 @@
           "type": "row",
           "children": [
             {
-              "id": "main",
-              "type": "block",
-              "content": {
-                "tab": "active",
-                "pane": {
-                  "header": {
-                    "content": {
-                      "mod": "pane"
-                    },
-                    "reveal": "always",
-                    "height": 30,
-                    "position": "top"
+              "id": "centro",
+              "type": "column",
+              "children": [
+                {
+                  "id": "main",
+                  "type": "block",
+                  "content": {
+                    "tab": "active",
+                    "pane": {
+                      "header": {
+                        "content": {
+                          "mod": "pane"
+                        },
+                        "reveal": "always",
+                        "height": 30,
+                        "position": "top"
+                      },
+                      "background": "background",
+                      "border": {
+                        "width": 1,
+                        "color": "border"
+                      },
+                      "focus": {
+                        "width": 1,
+                        "color": "accent"
+                      },
+                      "radius": 10,
+                      "gap": 8,
+                      "lone": true
+                    }
+                  }
+                },
+                {
+                  "id": "db-panel",
+                  "type": "block",
+                  "content": {
+                    "mod": "mi-db"
                   },
-                  "background": "background",
-                  "border": {
-                    "width": 1,
-                    "color": "border"
-                  },
-                  "focus": {
-                    "width": 1,
-                    "color": "accent"
-                  },
-                  "radius": 10,
-                  "gap": 8,
-                  "lone": true
+                  "size": {
+                    "px": 0
+                  }
                 }
-              }
+              ],
+              "gap": 8
             },
             {
               "id": "panel",
@@ -172,6 +199,26 @@
                       "type": "block",
                       "content": {
                         "mod": "branch-pr"
+                      }
+                    },
+                    {
+                      "id": "p-avisos",
+                      "type": "block",
+                      "content": {
+                        "mod": "mis-avisos",
+                        "props": {
+                          "panel": true
+                        }
+                      }
+                    },
+                    {
+                      "id": "p-issues",
+                      "type": "block",
+                      "content": {
+                        "mod": "mi-issues",
+                        "props": {
+                          "panel": true
+                        }
                       }
                     }
                   ],
@@ -236,7 +283,7 @@
                 }
               },
               "size": {
-                "px": 110
+                "px": 0
               }
             },
             {
