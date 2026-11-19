@@ -4,6 +4,12 @@
 # No toca casos normales: rm -rf node_modules, dist, rutas concretas, worktrees, scratchpad.
 set -uo pipefail
 
+# Registro mínimo de bloqueos para /retro (no cambia la decisión del hook).
+bloqueo() {
+  mkdir -p "$HOME/.cache/claude-guard" 2>/dev/null
+  jq -cn --arg ts "$(date -Is)" --arg hook "rm-safety" --arg motivo "$1" --arg cwd "$PWD" '{ts:$ts,hook:$hook,motivo:$motivo,cwd:$cwd}' >> "$HOME/.cache/claude-guard/bloqueos.jsonl" 2>/dev/null || true
+}
+
 input=$(cat)
 command=$(jq -r '.tool_input.command // ""' <<<"$input")
 [[ -z "$command" ]] && exit 0
@@ -28,6 +34,7 @@ mkdir -p "$HOME/.cache/claude-guard"
 printf '%s\t%s\t%s\t%s\n' "$(date -Is)" "$mode" "$reason" "${command:0:300}" >> "$HOME/.cache/claude-guard/observe.log"
 
 if [[ "$mode" == block ]]; then
+  bloqueo "$reason"
   echo "Bloqueado (rm-safety): $reason. Si es intencionado, que Cristina lo ejecute a mano o ponga rm-safety.mode en observe." >&2
   exit 2
 fi
