@@ -202,7 +202,8 @@ test("--ci: falla con críticos nuevos, pasa si ya estaban y falla si aparece ot
 });
 
 test("--ci sin críticos: sale 0", () => {
-  const e = escenario({ semgrep: path.join(FIX, "semgrep.json") });
+  // npm simulado: sin él, corre el npm real y su audit de red encuentra críticos de verdad
+  const e = escenario({ npm: path.join(FIX, "npm-audit-vacio.json"), semgrep: path.join(FIX, "semgrep.json") });
   assert.equal(correr(e, "--ci").status, 0);
 });
 

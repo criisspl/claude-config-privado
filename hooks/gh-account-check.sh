@@ -26,10 +26,11 @@ ll=$(echo "$login" | tr '[:upper:]' '[:lower:]')
 
 ok=0
 [[ "$lo" == "$ll" ]] && ok=1
-[[ "$lo" == "civitatis" && "$ll" == "csantos-civ" ]] && ok=1
+# GH_ACCOUNT_MAP="org=login,org2=login2": cuentas permitidas para una org distinta a la del login
+[[ ",${GH_ACCOUNT_MAP:-}," == *",$lo=$ll,"* ]] && ok=1
 
 echo "gh: cuenta activa $login, org del remote origin $org"
 if [[ $ok -eq 0 ]]; then
-  echo "AVISO: la cuenta gh ($login) no parece la de la org $org (trabajo: csantos-civ con GH_CONFIG_DIR=~/.config/gh-work; personal: criisspl con ~/.config/gh-personal)."
+  echo "AVISO: la cuenta gh ($login) no parece la de la org $org (cambia de cuenta con GH_CONFIG_DIR o permite el par con GH_ACCOUNT_MAP=org=login)."
 fi
 exit 0
