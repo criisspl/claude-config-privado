@@ -4,7 +4,7 @@ Dos hooks que sostienen [`ahorro-de-tokens.md`](ahorro-de-tokens.md) sin depende
 
 ## `ctx-guard` (UserPromptSubmit)
 
-Bloquea el prompt cuando el contexto de la sesión pasa de un límite (por defecto 140 000 tokens) y pide `/compact` (misma tarea) o `/clear` (tarea nueva). Deja pasar `/compact` y `/clear`. Cuenta solo lo posterior al último compact, porque justo después seguiría viéndose el uso antiguo. Se ajusta con `CTX_GUARD_LIMIT`.
+Bloquea el prompt cuando el contexto de la sesión pasa de un límite (por defecto 140 000 tokens) y pide `/compact` (misma tarea) o `/clear` (tarea nueva). Deja pasar `/compact` y `/clear`. Cuenta solo lo posterior al último compact, porque justo después seguiría viéndose el uso antiguo. Se ajusta con `CTX_GUARD_LIMIT`. Con `CTX_GUARD_MODE=light` no bloquea: solo avisa (`additionalContext`); por defecto es `hard`. Desde `CTX_GUARD_HANDOFF` (120 000) hasta el límite, inyecta una instrucción para que Claude termine su respuesta con un prompt de traspaso que se pega tras `/clear`.
 
 ## `compact-reinject` (SessionStart, matcher `compact`)
 
