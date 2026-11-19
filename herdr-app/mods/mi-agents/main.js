@@ -49,6 +49,10 @@ function title(tab, l) {
   const telling = live && live !== (l?.terminal ?? l?.address) && live !== prog && !path && !live.includes("@") && live.toLowerCase() !== l?.program?.key;
   return (tab.name === prog || !tab.named) && telling ? live : tab.name;
 }
+// Cuenta personal: cw nombra el space «me · …». Mismo acento que mi-tabs y mi-pendientes.
+const PERSONAL = "#f0a0c8";
+const esPersonal = (n) => /^me\s*·\s*/i.test(n ?? "");
+const PALABRA = { working: "trabajando", blocked: "esperando", done: "listo" };
 const RANK = { blocked: 4, done: 3, working: 2, idle: 1 };
 // A sub-agent without a pane isn't in agents(): its raw word, error counting as
 // blocked. It's never done: it reports to its parent, and the parent's done is the news.
@@ -106,6 +110,7 @@ export default class Agents extends View {
     // Each agent's last state and when it changed (ms), kept across restarts.
     try { this.changed = JSON.parse(localStorage.getItem("changed") ?? "{}"); } catch { this.changed = {}; }
     if (!this.changed || typeof this.changed !== "object" || Array.isArray(this.changed)) this.changed = {};
+    setShared("agents.desde", this.changed);
     try { this.pendingPins = JSON.parse(localStorage.getItem("pins") ?? "[]"); } catch { this.pendingPins = []; }
     if (!Array.isArray(this.pendingPins)) this.pendingPins = [];
     if (!this.pendingPins.length) localStorage.removeItem("pins");
@@ -128,6 +133,7 @@ export default class Agents extends View {
     const listed = new Set(list.map((a) => a.address));
     for (const [k, c] of Object.entries(this.changed)) if (!listed.has(k) && now - c.at > 30 * 86400000) delete this.changed[k];
     localStorage.setItem("changed", JSON.stringify(this.changed));
+    setShared("agents.desde", this.changed); // mi-tabs lo lee para el tiempo trabajando
   }
 
   // Keep offline pins until their terminal returns, and keep each pending until
@@ -301,7 +307,10 @@ export default class Agents extends View {
     // agent's own title, never an automatic tab number unless two rows would
     // otherwise read the same.
     // Read the pane snapshot once: every host read copies the whole list into JS.
-    const leads = leadPanes(panes());
+    const ps = panes();
+    const leads = leadPanes(ps);
+    const cwdDe = new Map(ps.map((p) => [p.pane, p.cwd]));
+    const ramas = shared("pendientes.ramas") ?? {}; // las rellena mi-pendientes
     const tabs = new Map(spaces().flatMap(s => s.tabs).map(tab => [tab.id, tab]));
     const labels = new Map(list.map(a => {
       const tab = tabs.get(a.tab);
@@ -335,6 +344,10 @@ export default class Agents extends View {
           .child(h_flex().w(14).flex_none().items_center().justify_center().child(this.status(t, a, true)));
       }
       const when = this.since(a);
+      const rama = ramas[cwdDe.get(a.pane)];
+      const chip = rama ? (rama.ticket ?? rama.rama) : null;
+      const personal = esPersonal(a.space_name);
+      const palabra = PALABRA[a.status];
       const idle = a.status === "idle" && !a.focused;
       const isPinned = a.pinned;
       const pin = div()
@@ -384,10 +397,12 @@ export default class Agents extends View {
         .child(h_flex().flex_1().min_w(0).gap(5).items_center()
           .child(div().min_w(0).max_w(full && more ? 120 : 200).truncate().text_color(idle ? t.muted : t.foreground).child(name))
           .when(full && Boolean(more), el => el.child(div().flex_1().min_w(0).truncate().text_color(t.dim).child(`\u00b7 ${more}`))))
+        .when(personal, el => el.child(div().flex_none().px(5).h(15).rounded(4).bg(PERSONAL + "26").text_size(10).text_color(PERSONAL).flex().items_center().child("me")))
+        .when(Boolean(chip), el => el.child(div().flex_none().max_w(96).truncate().text_size(10.5).text_color(t.dim).tooltip(rama.rama).child(chip)))
         .when(Boolean(machine), el => el.child(div().text_size(10).text_color(t.dim).child(machine)))
         .when(subs.length > 0, el => el.child(fold(a, subs)))
         .when(this.hovered === a.address, el => el.child(pin))
-        .when(this.hovered !== a.address && Boolean(when), el => el.child(div().flex_none().text_size(11).text_color(t.dim).child(duration(now - when))))
+        .when(this.hovered !== a.address && Boolean(when), el => el.child(div().flex_none().text_size(11).text_color(t.dim).child(palabra ? `${palabra} ${duration(now - when)}` : duration(now - when))))
         .child(this.status(t, a, byPriority && !isPinned));
     };
 
