@@ -3,7 +3,7 @@
 
 export const DIAS3 = 3 * 86400000;
 export const RAMAS_BASE = ["main", "master", "develop", "dev", "trunk"];
-export const ETIQUETAS_AUTO = ["agente-esperando", "sin-commit", "sin-push", "pr-comentarios", "ci-rojo", "olvidado"];
+export const ETIQUETAS_AUTO = ["agente-esperando", "sin-commit", "sin-push", "pr-comentarios", "ci-rojo", "olvidado", "vulnerabilidad"];
 
 // Space de la cuenta personal: cw lo nombra «me · …» (y ~/.bashrc activa la cuenta por ese prefijo).
 export const esPersonal = (nombre) => /^me\s*·\s*/i.test(nombre ?? "");
@@ -102,6 +102,19 @@ export function etiquetasGit({ porcelain, sinPush, ultimoCommit, rama, ahora = D
   if (rama && !RAMAS_BASE.includes(rama) && rama !== "(detached)" && ultimoCommit && ahora - ultimoCommit > DIAS3) et.push("olvidado");
   return et;
 }
+
+// Críticas + altas de una ultima.json de /auditar (texto crudo). 0 si falta, está corrupta o no tiene resumen.
+export function vulnerabilidadesGraves(texto) {
+  try {
+    const r = JSON.parse(texto)?.resumen;
+    const n = (x) => (Number.isFinite(Number(x)) && Number(x) > 0 ? Math.floor(Number(x)) : 0);
+    return n(r?.critica) + n(r?.alta);
+  } catch {
+    return 0;
+  }
+}
+
+export const tituloVulnerabilidades = (n) => `${n} ${n === 1 ? "vulnerabilidad crítica/alta" : "vulnerabilidades críticas/altas"}`;
 
 const MAL_CI = new Set(["FAILURE", "TIMED_OUT", "ERROR", "STARTUP_FAILURE", "ACTION_REQUIRED"]);
 

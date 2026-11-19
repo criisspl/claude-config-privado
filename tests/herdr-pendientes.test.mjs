@@ -109,3 +109,30 @@ test("ticket, repo, antigüedad y cuenta personal", () => {
   assert.equal(L.esPersonal("me · mi-proyecto"), true);
   assert.equal(L.esPersonal("web"), false);
 });
+
+test("vulnerabilidadesGraves: suma críticas y altas; 0 si falta, corrupto o sin resumen", () => {
+  assert.equal(L.vulnerabilidadesGraves(JSON.stringify({ resumen: { critica: 1, alta: 2, media: 9 } })), 3);
+  assert.equal(L.vulnerabilidadesGraves(JSON.stringify({ resumen: { critica: 0, alta: 0, baja: 4 } })), 0);
+  assert.equal(L.vulnerabilidadesGraves(""), 0);
+  assert.equal(L.vulnerabilidadesGraves("{roto"), 0);
+  assert.equal(L.vulnerabilidadesGraves("null"), 0);
+  assert.equal(L.vulnerabilidadesGraves(JSON.stringify({ resumen: { critica: "x", alta: -1 } })), 0);
+});
+
+test("tituloVulnerabilidades y etiqueta vulnerabilidad en las automáticas", () => {
+  assert.equal(L.tituloVulnerabilidades(3), "3 vulnerabilidades críticas/altas");
+  assert.equal(L.tituloVulnerabilidades(1), "1 vulnerabilidad crítica/alta");
+  assert.ok(L.ETIQUETAS_AUTO.includes("vulnerabilidad"));
+});
+
+test("reconciliar: el item vulnerabilidad se cierra solo al bajar a 0 y se reabre si vuelven", () => {
+  const det = { id: "vuln:/p", titulo: "2 vulnerabilidades críticas/altas", etiquetas: ["vulnerabilidad"] };
+  let items = L.reconciliar([], [det], 1000);
+  assert.equal(items[0].cerrado, null);
+  items = L.reconciliar(items, [{ ...det, titulo: "5 vulnerabilidades críticas/altas" }], 2000);
+  assert.equal(items[0].titulo, "5 vulnerabilidades críticas/altas");
+  items = L.reconciliar(items, [], 3000);
+  assert.equal(items[0].cerrado, 3000);
+  items = L.reconciliar(items, [det], 4000);
+  assert.equal(items[0].cerrado, null);
+});
