@@ -11,9 +11,11 @@ content=$(echo "$input" | jq -r '.tool_input.content // .tool_input.new_string /
 
 [[ -z "$content" ]] && exit 0
 
-# Skip test fixtures, examples, and sample files
+# Tests, fixtures y ejemplos: solo se saltan los patrones genéricos (api_key=..., URLs de BD),
+# nunca los formatos de proveedor inequívocos
+es_test=0
 if echo "$file_path" | grep -qP '(\.test\.|\.spec\.|__fixtures__/|\.(example|sample)$)'; then
-  exit 0
+  es_test=1
 fi
 
 # AWS Access Key ID
@@ -28,11 +30,27 @@ if echo "$content" | grep -qP 'gh[ps]_[a-zA-Z0-9]{36}'; then
   exit 2
 fi
 
+# Anthropic, OpenAI, GitHub fine-grained, Slack
+if echo "$content" | grep -qP 'sk-(ant|proj)-[A-Za-z0-9_-]{20,}|\bsk-[A-Za-z0-9]{40,}'; then
+  echo "Blocked: Anthropic/OpenAI API key detected in ${file_path}" >&2
+  exit 2
+fi
+if echo "$content" | grep -qP 'github_pat_[A-Za-z0-9_]{22,}'; then
+  echo "Blocked: GitHub fine-grained token detected in ${file_path}" >&2
+  exit 2
+fi
+if echo "$content" | grep -qP 'xox[baprs]-[A-Za-z0-9-]{10,}'; then
+  echo "Blocked: Slack token detected in ${file_path}" >&2
+  exit 2
+fi
+
 # Private key blocks
 if echo "$content" | grep -qP -e '-----BEGIN\s+\S*\s*PRIVATE KEY-----'; then
   echo "Blocked: private key block detected in ${file_path}" >&2
   exit 2
 fi
+
+[[ $es_test == 1 ]] && exit 0
 
 # Generic API key / secret patterns (long values)
 if echo "$content" | grep -qiP '(api_key|secret_key|auth_token|access_token)\s*[=:]\s*[a-zA-Z0-9+/]{20,}'; then

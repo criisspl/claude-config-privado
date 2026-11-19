@@ -182,3 +182,29 @@ test("git-safety no bloquea lo legítimo", () => {
     assert.equal(git(c, repoEnRama("feat")).code, 0, c);
   }
 });
+
+const secreto = (file_path, content) => correr("no-secret-leak.sh", { file_path, content });
+const rep = (s, n) => s.repeat(n);
+
+test("no-secret-leak detecta claves de proveedores nuevos", () => {
+  for (const c of ["sk-ant-" + rep("x", 40), "sk-proj-" + rep("a1", 30), "sk-" + rep("b", 48),
+    "github_pat_" + rep("A", 30), "xoxb-" + rep("1", 12), "xoxp-" + rep("2", 12) + "-abc"]) {
+    assert.equal(secreto("/p/src/a.ts", `const k = "${c}"`).code, 2, c);
+  }
+});
+
+test("no-secret-leak: la excepción de tests solo vale para patrones genéricos", () => {
+  assert.equal(secreto("/p/a.test.ts", "api_key=" + rep("a", 24)).code, 0);
+  assert.equal(secreto("/p/a.spec.ts", "api_key=" + rep("a", 24)).code, 0);
+  for (const c of ["AKIA" + rep("A", 16), "ghp_" + rep("a", 36), "sk-ant-" + rep("x", 40), "github_pat_" + rep("A", 30), "xoxb-" + rep("1", 12),
+    "-----BEGIN RSA " + "PRIVATE KEY-----"]) {
+    assert.equal(secreto("/p/a.test.ts", c).code, 2, c);
+    assert.equal(secreto("/p/__fixtures__/a.json", c).code, 2, c);
+  }
+});
+
+test("no-secret-leak deja pasar texto normal", () => {
+  for (const c of ["const risk-assessment = 1", "task-force-" + rep("a", 40), "sk-learn", "api_key=process.env.KEY"]) {
+    assert.equal(secreto("/p/src/a.ts", c).code, 0, c);
+  }
+});
