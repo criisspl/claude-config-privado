@@ -13,13 +13,7 @@ bloqueo() {
 input=$(cat)
 RE_LOCK='(package-lock\.json|yarn\.lock|pnpm-lock\.yaml|composer\.lock)'
 
-# Without jq, fall back to matching the raw input
-if ! command -v jq >/dev/null 2>&1; then
-  if grep -qE "${RE_LOCK}|/(dist|\.next)/" <<<"$input"; then
-    echo "Blocked: lockfile or generated folder (jq not found, install it for exact matching)" >&2; exit 2
-  fi
-  echo "read-guard: jq not found, hook inactive" >&2; exit 0
-fi
+command -v jq >/dev/null 2>&1 || { echo "Bloqueado: falta jq, el hook no puede comprobar nada (instálalo: apt/brew install jq)" >&2; exit 2; }
 file=$(echo "$input" | jq -r '.tool_input.file_path // ""')
 
 [[ -z "$file" ]] && exit 0

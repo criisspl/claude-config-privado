@@ -150,3 +150,75 @@ test("stop-guard fuera de un repo sale con 0", () => {
   const d = fs.mkdtempSync(path.join(os.tmpdir(), "hk-"));
   assert.equal(parar(d).code, 0);
 });
+
+test("git-safety bloquea force push con refspec +", () => {
+  for (const c of ["git push origin +main", "git push origin +feat", "git push -u origin +HEAD:feat", 'git push origin "+feat"']) {
+    assert.equal(git(c, repoEnRama("feat")).code, 2, c);
+  }
+});
+
+test("git-safety bloquea push a main con opciones globales de git", () => {
+  for (const c of ["git -C . push origin main", "git -C x push origin HEAD:main", "git -c k=v push origin main", "git --no-pager push origin master"]) {
+    assert.equal(git(c, repoEnRama("feat")).code, 2, c);
+  }
+});
+
+test("git-safety bloquea commit -n (= --no-verify)", () => {
+  for (const c of ["git commit -n -m x", "git commit -m x -n", "git commit -nm x", "git commit -anm x", "git -C . commit -n -m x"]) {
+    assert.equal(git(c).code, 2, c);
+  }
+});
+
+test("git-safety bloquea restore y checkout que descartan todo", () => {
+  for (const c of ["git restore .", "git checkout .", "git restore -- .", "git restore --worktree .", "git checkout HEAD .", "git restore --source=HEAD~1 ."]) {
+    assert.equal(git(c).code, 2, c);
+  }
+});
+
+test("git-safety no bloquea lo legítimo", () => {
+  for (const c of ["git restore --staged file", "git restore --staged .", "git restore src/a.ts", "git checkout -b x", "git checkout feat",
+    'git commit -m "fix -n flag"', "git commit -mnote", "git commit --amend -m x", "git push origin feat", "git push -u origin feat",
+    "git -C x status", "git -c k=v push origin feat"]) {
+    assert.equal(git(c, repoEnRama("feat")).code, 0, c);
+  }
+});
+
+const secreto = (file_path, content) => correr("no-secret-leak.sh", { file_path, content });
+const rep = (s, n) => s.repeat(n);
+
+test("no-secret-leak detecta claves de proveedores nuevos", () => {
+  for (const c of ["sk-ant-" + rep("x", 40), "sk-proj-" + rep("a1", 30), "sk-" + rep("b", 48),
+    "github_pat_" + rep("A", 30), "xoxb-" + rep("1", 12), "xoxp-" + rep("2", 12) + "-abc"]) {
+    assert.equal(secreto("/p/src/a.ts", `const k = "${c}"`).code, 2, c);
+  }
+});
+
+test("no-secret-leak: la excepción de tests solo vale para patrones genéricos", () => {
+  assert.equal(secreto("/p/a.test.ts", "api_key=" + rep("a", 24)).code, 0);
+  assert.equal(secreto("/p/a.spec.ts", "api_key=" + rep("a", 24)).code, 0);
+  for (const c of ["AKIA" + rep("A", 16), "ghp_" + rep("a", 36), "sk-ant-" + rep("x", 40), "github_pat_" + rep("A", 30), "xoxb-" + rep("1", 12),
+    "-----BEGIN RSA " + "PRIVATE KEY-----"]) {
+    assert.equal(secreto("/p/a.test.ts", c).code, 2, c);
+    assert.equal(secreto("/p/__fixtures__/a.json", c).code, 2, c);
+  }
+});
+
+test("no-secret-leak deja pasar texto normal", () => {
+  for (const c of ["const risk-assessment = 1", "task-force-" + rep("a", 40), "sk-learn", "api_key=process.env.KEY"]) {
+    assert.equal(secreto("/p/src/a.ts", c).code, 0, c);
+  }
+});
+
+test("hooks de bloqueo salen con 2 si falta jq", () => {
+  const bin = fs.mkdtempSync(path.join(os.tmpdir(), "nojq-"));
+  for (const c of ["bash", "cat", "grep", "sed", "tr", "dirname", "readlink", "git", "date", "mkdir", "basename"]) {
+    const p = spawnSync("which", [c], { encoding: "utf8" }).stdout.trim();
+    if (p) fs.symlinkSync(p, path.join(bin, c));
+  }
+  const bash = spawnSync("which", ["bash"], { encoding: "utf8" }).stdout.trim();
+  for (const h of ["git-safety", "no-secret-leak", "rm-safety", "protect-config", "read-guard", "no-screenshot-main"]) {
+    const r = spawnSync(bash, [path.join(HOOKS, `${h}.sh`)], { input: "{}", env: { PATH: bin, HOME: bin }, encoding: "utf8" });
+    assert.equal(r.status, 2, h);
+    assert.match(r.stderr, /jq/, h);
+  }
+});
