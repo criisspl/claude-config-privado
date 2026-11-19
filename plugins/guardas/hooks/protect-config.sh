@@ -1,0 +1,1 @@
+../../../hooks/protect-config.sh
