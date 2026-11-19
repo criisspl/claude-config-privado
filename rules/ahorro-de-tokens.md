@@ -22,6 +22,6 @@ Cada turno vuelve a pagar todo el contexto acumulado. Casi todo el ahorro sale d
 
 ## Delegar
 
-- Lo mecánico va a Haiku, el código con plan a Sonnet, Opus solo con ok ([`elegir-modelo.md`](elegir-modelo.md)).
+- Lo mecánico va a Haiku, el código con plan a Sonnet, Opus cuando haga falta, sin pedir ok ([`elegir-modelo.md`](elegir-modelo.md)).
 - Capturas de pantalla: nunca en el hilo principal ([`capturas-en-subagente.md`](capturas-en-subagente.md)).
 - Agentes en paralelo: los mínimos necesarios (máx. 5) y solo con tareas independientes.
