@@ -6,6 +6,10 @@ Cada versión publicada tiene su sección `## X.Y.Z`. Al subir `VERSION` en `mai
 - **Menor** (1.1.0): paquetes o skills nuevos, reglas nuevas.
 - **Parche** (1.0.1): correcciones de texto o de errores.
 
+## 1.7.1
+
+- Corrección: `db-visor` solo guarda comandos que *ejecutan* `mysql`, `psql` o `sqlite3`; antes saltaba con cualquiera que los mencionara y abría el panel de BBDD en cada Bash.
+
 ## 1.7.0
 
 - Seguridad: `rm-safety` con el regex de ai-development-rules (`/bin/rm`, `\rm`, `$HOME/*`, sin falsos positivos SQL con `-m/--body`); `git-safety` bloquea borrar `main`, `master` y `develop` en remoto; `no-secret-leak` lee sus patrones de `hooks/lib/secret-patterns`; `opus-watch` lee el modelo con jq y cae a grep.

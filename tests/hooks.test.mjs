@@ -244,3 +244,18 @@ test("no-secret-leak usa lib/secret-patterns: bloquea proveedor en test, deja pa
   assert.equal(correr("no-secret-leak.sh", { file_path: "a.test.js", content: "api_key=abcdefghij1234567890abcd" }).code, 0);
   assert.equal(correr("no-secret-leak.sh", { file_path: "a.js", content: "api_key=abcdefghij1234567890abcd" }).code, 2);
 });
+
+test("db-visor solo guarda comandos que ejecutan mysql/psql/sqlite3, no los que lo mencionan", () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), "dbv-"));
+  const fichero = path.join(home, ".config/herdr-app/data/db-ultima.json");
+  const run = (command) => spawnSync("bash", [path.join(HOOKS, "db-visor.sh")], { input: JSON.stringify({ tool_name: "Bash", tool_input: { command } }), env: { ...process.env, HOME: home }, encoding: "utf8" });
+  for (const c of ["cat > main.js <<EOF\nuse mysql aquí\nEOF", "ls ~/.claude/mcp/mysql-mcp.sh", "echo mysql"]) {
+    run(c);
+    assert.equal(fs.existsSync(fichero), false, c);
+  }
+  for (const c of ['mysql -e "select 1"', 'MYSQL_PWD=x mysql -B -e "x"', 'cd a && psql -c "x"']) {
+    fs.rmSync(fichero, { force: true });
+    run(c);
+    assert.equal(fs.existsSync(fichero), true, c);
+  }
+});
