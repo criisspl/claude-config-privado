@@ -70,7 +70,7 @@ export default class Auditoria extends View {
       if (r.code !== 0) throw new Error("send-text");
       closeOverlay(props()?.overlay);
     } catch {
-      this.aviso = "No se pudo enviar al agente.";
+      this.aviso = `No se pudo enviar al agente. Escríbelo tú: ${texto}`;
       cx.notify();
     }
   }
