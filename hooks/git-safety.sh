@@ -33,6 +33,12 @@ if echo "$command" | grep -qP "${G}push\\b[^;&|]*\\s[\"']?\\+[^\\s+]"; then
   exit 2
 fi
 
+# Block remote deletion of protected branches (--delete, -d or :branch)
+if echo "$bare" | grep -qP "${G}push\\b.*((--delete|\\s-d)\\b.*\\s(refs/heads/)?(main|master|develop)(\\s|\$)|\\s:(refs/heads/)?(main|master|develop)(\\s|\$))"; then
+  echo "Blocked: remote deletion of protected branch (main/master/develop)" >&2
+  exit 2
+fi
+
 # Block hard reset
 if echo "$command" | grep -qP "${G}reset\\s+--hard"; then
   echo "Blocked: git reset --hard is not allowed" >&2

@@ -222,3 +222,25 @@ test("hooks de bloqueo salen con 2 si falta jq", () => {
     assert.match(r.stderr, /jq/, h);
   }
 });
+
+test("git-safety bloquea borrar main/master/develop en remoto", () => {
+  for (const c of ["git push origin --delete main", "git push origin :master", "git push -d origin develop"]) assert.equal(git(c).code, 2, c);
+  assert.equal(git("git push origin --delete feature/x").code, 0);
+  assert.equal(git('git commit -m "git push origin :main"').code, 0);
+});
+
+const rm = (command) => correr("rm-safety.sh", { command });
+test("rm-safety: rutas peligrosas, /bin/rm y \\rm; sin falsos positivos SQL", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rm-"));
+  fs.copyFileSync(path.join(HOOKS, "rm-safety.sh"), path.join(dir, "rm-safety.sh"));
+  fs.writeFileSync(path.join(dir, "rm-safety.mode"), "block\n");
+  const run = (command) => spawnSync("bash", [path.join(dir, "rm-safety.sh")], { input: JSON.stringify({ tool_input: { command } }), env: { ...process.env, HOME: dir }, encoding: "utf8" }).status;
+  for (const c of ["rm -rf /", "rm -rf $HOME/*", "/bin/rm -rf /usr", "\\rm -rf ~", "rm -rf /home/csantos"]) assert.equal(run(c), 2, c);
+  for (const c of ["rm -rf node_modules", "rm -rf /usr/local/share/foo", 'git commit -m "no hacer DROP TABLE users"', 'gh pr create --body "TRUNCATE TABLE x"']) assert.equal(run(c), 0, c);
+});
+
+test("no-secret-leak usa lib/secret-patterns: bloquea proveedor en test, deja pasar genérico", () => {
+  assert.equal(correr("no-secret-leak.sh", { file_path: "a.test.js", content: "AKIAABCDEFGHIJKLMNOP" }).code, 2);
+  assert.equal(correr("no-secret-leak.sh", { file_path: "a.test.js", content: "api_key=abcdefghij1234567890abcd" }).code, 0);
+  assert.equal(correr("no-secret-leak.sh", { file_path: "a.js", content: "api_key=abcdefghij1234567890abcd" }).code, 2);
+});

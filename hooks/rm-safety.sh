@@ -20,13 +20,19 @@ modefile="$(dirname "$(readlink -f "$0")")/rm-safety.mode"
 [[ -f "$modefile" ]] && mode=$(tr -d '[:space:]' < "$modefile")
 
 reason=""
-nq=$(tr -d "\"'" <<<"$command")  # rm -rf "/" == rm -rf /
+# Quita el valor de -m/--message/--body/--title para que su texto no dispare el SQL (como git-safety.sh)
+stripped=$(sed -E "s/(-[a-zA-Z]*[mb]|--message|--body|--title)(=|[[:space:]]+)(\"[^\"]*\"|'[^']*')//g" <<<"$command")
 # rm recursivo (-r/-R/--recursive, solo o combinado con -f) contra un objetivo peligroso
-if grep -qP '(^|[;&|(\s])rm\s+(?:-[a-zA-Z-]+\s+)*(?:-[a-zA-Z]*[rR][a-zA-Z]*|--recursive)\s+(?:-[a-zA-Z-]+\s+)*(?:--\s+)?(?:/|/\*|/(?:usr|etc|var|bin|sbin|lib|opt|boot|Users|System|Library|Applications)/?|~|~/|~/\*|\$HOME|\$\{HOME\}|"\$HOME"|/home|/home/[^/\s]+/?|\.|\./|\.\.|\.\./|\*|\./\*)(?=\s|$|[;&|)])' <<<"$nq"; then
-  reason="rm recursivo sobre /, un directorio del sistema, ~, \$HOME, /home, ., .. o *"
-elif grep -qP '(^|[;&|(\s])rm\s.*--no-preserve-root' <<<"$command"; then
+# Objetivo peligroso: /, /*, ~, ~/, ~/*, $HOME|${HOME} (con / y * opcionales, con o sin comillas), /home, /home/user, directorios del sistema (/usr, /etc, /var, /bin, /sbin, /lib, /opt, /boot, /Users, /System, /Library, /Applications), ., .., *
+TARGET='["'"'"']?(?:(?:/|~/?|\$HOME|\$\{HOME\})["'"'"']?/?\*?|/home|/home/[^/\s]+/?|/(?:usr|etc|var|bin|sbin|lib|opt|boot|Users|System|Library|Applications)/?|\.\.?/?\*?|\*)["'"'"']?'
+# rm como comando: rm, /bin/rm, \rm
+RM='(^|[;&|(\s])(?:\S*/|\\)?rm'
+if grep -qP "${RM}"'\s+(?:-[a-zA-Z-]+\s+)*(?:-[a-zA-Z]*[rR][a-zA-Z]*|--recursive)\s+(?:-[a-zA-Z-]+\s+)*(?:--\s+)?'"${TARGET}"'(?=\s|$|[;&|)])' <<<"$command"; then
+  reason="rm recursivo sobre /, ~, \$HOME, /home, directorios del sistema, ., .. o *"
+elif grep -qP "${RM}"'\s.*--no-preserve-root' <<<"$command"; then
   reason="rm con --no-preserve-root"
-elif grep -qiP '\b(DROP\s+(DATABASE|SCHEMA|TABLE)|TRUNCATE\s+TABLE)\b|liquibase\s+.*\b(drop-all|dropAll)\b' <<<"$command"; then
+elif grep -qiP '\b(mysql|mariadb|psql|sqlite3|sqlcmd|liquibase)\b' <<<"$stripped" \
+  && grep -qiP '\b(DROP\s+(DATABASE|SCHEMA|TABLE)|TRUNCATE\s+TABLE)\b|\bliquibase\s+.*\b(drop-all|dropAll)\b' <<<"$stripped"; then
   reason="borrado SQL/Liquibase (DROP, TRUNCATE o drop-all)"
 fi
 
