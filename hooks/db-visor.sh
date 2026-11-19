@@ -8,7 +8,7 @@ try:
     tool, ti = d.get("tool_name", ""), d.get("tool_input") or {}
     if tool == "Bash":
         cmd = ti.get("command", "")
-        if not re.search(r"\b(mysql|psql|sqlite3)\b", cmd): sys.exit(0)
+        if not re.search(r"(?:^|[;&|(]\s*|\n\s*)(?:\w+=\S+\s+)*(?:\S*/)?(?:mysql|psql|sqlite3)\s", cmd): sys.exit(0)
         q = cmd
     elif tool.startswith("mcp__") and re.search(r"mysql|postgres|sql|db", tool, re.I):
         if re.search(r"list_tables|describe|connect", tool): q = tool.split("__")[-1] + " " + json.dumps(ti, ensure_ascii=False)
