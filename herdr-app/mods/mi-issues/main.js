@@ -176,7 +176,6 @@ export default class Pendientes extends View {
       const et = [...i.etiquetas];
       if (vivos.some((a) => a.space === i.spaceId && a.status === "blocked")) et.unshift("agente-esperando");
       if (et.length) det.push({ id: `git:${i.dir}`, titulo: sinMe(i.nombre), repo: i.repo, rama: i.rama, ticket: i.ticket, etiquetas: et, dir: i.dir, spaceId: i.spaceId, personal: i.personal });
-      if (i.vulns > 0) det.push({ id: `vuln:${i.dir}`, titulo: tituloVulnerabilidades(i.vulns), repo: i.repo, rama: i.rama, ticket: i.ticket, etiquetas: ["vulnerabilidad"], dir: i.dir, spaceId: i.spaceId, personal: i.personal });
     }
     det.push(...this.prs);
     const nuevo = reconciliar(base, det, Date.now());
@@ -210,12 +209,13 @@ export default class Pendientes extends View {
     const acciones = [
       { id: "nuevo", etiqueta: "Nuevo pendiente" },
       { id: "cerrar", etiqueta: "Cerrar pendiente" },
-      { id: "pr", etiqueta: "Abrir PR del space actual" },
-      { id: "auditoria", etiqueta: "Auditoría de seguridad" },
     ].filter((a) => !texto || puntuar(texto, a.etiqueta) >= 0);
     filas.push(...acciones.map((a) => ({ tipo: "accion", a })));
     return filas;
   }
+
+  // En el panel lateral (props.panel) no hay overlay que cerrar.
+  cerrar() { if (!props()?.panel) closeOverlay(props()?.overlay); }
 
   elegir(fila, cx) {
     if (!fila) return;
@@ -225,21 +225,13 @@ export default class Pendientes extends View {
         const r = act ? (shared("pendientes.ramas") ?? {})[lugar(act, panes())] : null;
         Object.assign(this, { modo: "nuevo", paso: 0, form: { repoPorDefecto: r?.repo ?? "" }, q: "", at: 0 });
       } else if (fila.a.id === "cerrar") Object.assign(this, { modo: "cerrar", q: "", at: 0 });
-      else if (fila.a.id === "auditoria") {
-        openOverlay({ mod: "mi-auditoria", kind: "dialog", width: 820, height: 600 });
-        closeOverlay(props()?.overlay);
-      } else {
-        const act = spaces().find((s) => s.active);
-        const dir = act && lugar(act, panes());
-        if (dir) exec("sh", ["-c", `${ghEnv(esPersonal(act.name))}gh pr view --web`], { cwd: dir }).catch(() => {});
-        closeOverlay(props()?.overlay);
-      }
+      this.handle.focus();
       cx.notify();
       return;
     }
     if (fila.tipo === "salto") {
       saltar({ spaceId: fila.s.id });
-      closeOverlay(props()?.overlay);
+      this.cerrar();
       return;
     }
     const it = fila.it;
@@ -254,12 +246,12 @@ export default class Pendientes extends View {
     if (it.cerrado) return;
     if ((it.etiquetas ?? []).includes("vulnerabilidad")) {
       openOverlay({ mod: "mi-auditoria", kind: "dialog", width: 820, height: 600, props: { spaceId: it.spaceId } });
-      closeOverlay(props()?.overlay);
+      this.cerrar();
       return;
     }
     if (it.pr) exec("sh", ["-c", `${ghEnv(it.personal)}gh pr view ${Number(it.pr)} --web`], { cwd: it.dir }).catch(() => {});
     else if (!saltar(it)) return;
-    closeOverlay(props()?.overlay);
+    this.cerrar();
   }
 
   formulario(cx) {
@@ -290,7 +282,7 @@ export default class Pendientes extends View {
     const n = filas.length;
     if (k === "escape") {
       if (this.modo !== "buscar") Object.assign(this, { modo: "buscar", q: "", at: 0, paso: 0 });
-      else return closeOverlay(props()?.overlay);
+      else return this.cerrar();
     } else if (k === "down" && n) this.at = (this.at + 1) % n;
     else if (k === "up" && n) this.at = (this.at + n - 1) % n;
     else if ((k === "tab" || k === "left" || k === "right") && this.modo === "buscar") Object.assign(this, { tab: this.tab === "open" ? "closed" : "open", at: 0 });
@@ -353,7 +345,7 @@ export default class Pendientes extends View {
       .text_color(this.tab === id && this.modo === "buscar" ? t.foreground : t.muted)
       .hover((s) => s.bg(t.hover)).on_click((_e, cx) => { this.tab = id; this.modo = "buscar"; this.at = 0; cx.notify(); })
       .child(`${txt} ${n}`);
-    return v_flex().id("pendientes").track_focus(this.handle).size_full().min_h(0).p(8).gap(6).bg(t.popover).text_size(12.8)
+    return v_flex().id("pendientes").track_focus(this.handle).on_mouse_down("left", () => this.handle.focus()).size_full().min_h(0).p(8).gap(6).bg(t.popover).text_size(12.8)
       .on_key_down((e, cx) => this.tecla(e, cx))
       .child(h_flex().gap(6).items_center().px(4)
         .child(tabBtn("open", "Abiertos", nAb)).child(tabBtn("closed", "Cerrados", nCe))
@@ -373,7 +365,7 @@ export default class Pendientes extends View {
     const urgentes = (todos ?? []).filter((i) => !i.cerrado && (i.etiquetas ?? []).some((e) => e === "agente-esperando" || e === "ci-rojo" || e === "pr-comentarios")).length;
     return h_flex().id("pendientes-barra").size_full().px(10).gap(6).items_center().justify_end().bg(t.chrome).border_t(1).border_color(t.border)
       .text_size(11.8).text_color(n ? t.foreground : t.dim).cursor_pointer().hover((s) => s.bg(t.hover))
-      .on_click(() => openOverlay({ mod: "mi-issues", kind: "dialog", width: 760, height: 520 }))
+      .on_click(() => { run("layout.select", { stack: "panel-body", child: "p-issues" }); run("layout.show", { id: "panel" }); })
       .child(div().text_color(t.muted).child("Issues"))
       .child(div().font_semibold().text_color(urgentes ? "#e5c23a" : t.foreground).child(todos ? String(n) : "–"));
   }
