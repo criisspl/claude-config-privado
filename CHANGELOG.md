@@ -6,6 +6,10 @@ Cada versión publicada tiene su sección `## X.Y.Z`. Al subir `VERSION` en `mai
 - **Menor** (1.1.0): paquetes o skills nuevos, reglas nuevas.
 - **Parche** (1.0.1): correcciones de texto o de errores.
 
+## 1.9.1
+
+- `add` y `remove`: si el proyecto iba por detrás de la librería, enseñan las novedades desde su versión (antes lo movían a la versión nueva sin decirlo). `aplicar` y `update` no cambian.
+
 ## 1.9.0
 
 - Comando nuevo `claude-config check`, para CI: sale 1 si hay ficheros instalados editados a mano o si la versión del proyecto (`.claude/claude-config.json`) no es la de la librería; los paquetes detectados y sin instalar solo avisan. `status` sigue siendo informativo.

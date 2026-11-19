@@ -74,6 +74,8 @@ try {
       if (!resto.length) throw new Error(`Indica qué paquetes: claude-config ${cmd} <paquete...>`);
       const ids = cmd === "add" ? [...lock.paquetes, ...resto] : lock.paquetes.filter((p) => !resto.includes(p));
       informar(aplicar(proyecto, LIB, ids));
+      // El lock pasa a la versión de la librería: si iba por detrás, se enseña lo que ha cambiado.
+      if (lock.version !== version(LIB)) console.log(`\nNovedades desde la v${lock.version}:\n\n${cambiosEntre(LIB, lock.version, version(LIB))}`);
       break;
     }
     case "update": {

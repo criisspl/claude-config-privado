@@ -56,3 +56,17 @@ test("check: proyecto sin lock sale 1", () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "check-"));
   assert.equal(cli(dir, "check").status, 1);
 });
+
+test("add: si el proyecto iba por detrás, avisa de las novedades", () => {
+  const dir = proyecto();
+  fs.writeFileSync(path.join(dir, LOCK), JSON.stringify({ ...lockDe(dir), version: "1.8.3" }));
+  const r = cli(dir, "add", "vitest");
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(r.stdout, /Novedades desde la v1\.8\.3/);
+});
+
+test("add: si el proyecto está al día, no enseña novedades", () => {
+  const r = cli(proyecto(), "add", "vitest");
+  assert.equal(r.status, 0, r.stderr);
+  assert.doesNotMatch(r.stdout, /Novedades/);
+});
