@@ -10,11 +10,11 @@ cwd=$(jq -r '.cwd // empty' <<<"$input" 2>/dev/null)
 branch=$(git -C "${cwd:-.}" branch --show-current 2>/dev/null || true)
 key=$(grep -oE '[A-Z][A-Z0-9]+-[0-9]+' <<<"$branch ${cwd}" | head -1 || true)
 mkdir -p "$HOME/.cache/claude-guard"
-jq -cs --arg sid "$sid" --arg key "${key:-}" --arg cwd "$cwd" --arg ts "$(date -Is)" '
+jq -cs --arg sid "$sid" --arg key "${key:-}" --arg cwd "$cwd" --arg branch "${branch:-}" --arg ts "$(date -Is)" '
   [ .[] | select(.type=="assistant" and .message.usage) | {id:(.message.id // .uuid), m:(.message.model // "?"), u:.message.usage} ]
   | unique_by(.id)
   | group_by(.m)
   | map({model:.[0].m, input:(map(.u.input_tokens//0)|add), output:(map(.u.output_tokens//0)|add),
          cache_read:(map(.u.cache_read_input_tokens//0)|add), cache_write:(map(.u.cache_creation_input_tokens//0)|add)})
-  | {ts:$ts, session:$sid, jira:$key, cwd:$cwd, models:.}' "$tp" >> "$HOME/.cache/claude-guard/cost.jsonl" 2>/dev/null
+  | {ts:$ts, session:$sid, jira:$key, branch:$branch, cwd:$cwd, models:.}' "$tp" >> "$HOME/.cache/claude-guard/cost.jsonl" 2>/dev/null
 exit 0
