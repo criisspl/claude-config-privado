@@ -1,0 +1,19 @@
+{
+  "name": "criisspl",
+  "owner": { "name": "criisspl" },
+  "metadata": {
+    "description": "Config de Claude Code de criisspl: guardas (hooks de seguridad) y flujo (agentes y skills)."
+  },
+  "plugins": [
+    {
+      "name": "guardas",
+      "source": "./plugins/guardas",
+      "description": "Hooks de seguridad y control: git, rm, secretos, config protegida, lecturas, contexto, coste."
+    },
+    {
+      "name": "flujo",
+      "source": "./plugins/flujo",
+      "description": "Agentes (mecanico, buscador, implementador, revisor-pr, visual, experto) y skills de flujo de trabajo."
+    }
+  ]
+}

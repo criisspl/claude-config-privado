@@ -1,0 +1,1 @@
+../../../hooks/stop-guard.sh

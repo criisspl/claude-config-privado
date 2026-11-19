@@ -1,0 +1,1 @@
+../../../hooks/rm-safety.sh

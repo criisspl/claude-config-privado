@@ -2,6 +2,7 @@
 name: implementador
 description: Implementa un cambio de código cuando el plan ya está claro y acordado (ficheros, enfoque y criterios de aceptación definidos). Úsalo para ejecutar planes hechos con Opus; no para decidir el enfoque ni para depurar problemas raros.
 model: sonnet
+effort: medium
 maxTurns: 60
 ---
 
