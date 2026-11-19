@@ -12,14 +12,14 @@ import { v_flex, h_flex, ScrollHandle } from "gpui-base";
 import { spaces, panes, agents, run, exec, theme, shared, setShared, openOverlay, closeOverlay, props, checking } from "herdr";
 import {
   esPersonal, ticketDe, nombreRepo, antiguedad, puntuar, parseFiltro, tieneFiltros, aplicarFiltro,
-  etiquetasGit, evaluarPrs, reconciliar, nuevoManual, cerrar, leerAlmacen, serializar, RAMAS_BASE,
+  etiquetasGit, evaluarPrs, vulnerabilidadesGraves, tituloVulnerabilidades, reconciliar, nuevoManual, cerrar, leerAlmacen, serializar, RAMAS_BASE,
 } from "./logica.js";
 
 const ARCHIVO = "$HOME/.config/herdr-app/pendientes.json";
 const REFRESCO = 60000;
 const A_LA_VEZ = 3;
 const PERSONAL = "#f0a0c8"; // acento de la cuenta personal (el mismo en mi-tabs y mi-agents)
-const COLOR = { "agente-esperando": "#e5c23a", "ci-rojo": "#ef5350", "pr-comentarios": "#e08a4f", "sin-commit": "#5b8def", "sin-push": "#8b7cf6", olvidado: "#8a8fa3", manual: "#3fae6a" };
+const COLOR = { "agente-esperando": "#e5c23a", "ci-rojo": "#ef5350", "pr-comentarios": "#e08a4f", "sin-commit": "#5b8def", "sin-push": "#8b7cf6", olvidado: "#8a8fa3", vulnerabilidad: "#ef5350", manual: "#3fae6a" };
 const GH = "gh pr list --author @me --limit 30 --json number,title,headRefName,reviewDecision,statusCheckRollup,comments,author,createdAt,url";
 
 const sinMe = (n) => (n ?? "").replace(/^me\s*·\s*/i, "");
@@ -144,11 +144,12 @@ export default class Pendientes extends View {
 
   async mirarGit(l) {
     const g = (args) => exec("git", args, { cwd: l.dir, timeout: 20000 });
-    const [top, st, br, ct] = await Promise.all([
+    const [top, st, br, ct, raiz] = await Promise.all([
       g(["rev-parse", "--path-format=absolute", "--git-common-dir"]),
       g(["--no-optional-locks", "status", "--porcelain"]),
       g(["symbolic-ref", "-q", "--short", "HEAD"]),
       g(["log", "-1", "--format=%ct"]),
+      g(["rev-parse", "--show-toplevel"]),
     ]);
     if (top.code !== 0) return null; // no es un repo
     const rama = br.code === 0 ? br.stdout.trim() : "(detached)";
@@ -157,7 +158,13 @@ export default class Pendientes extends View {
     if (push.code !== 0) push = RAMAS_BASE.includes(rama) ? { stdout: "" } : await g(["log", "--oneline", "-20", "HEAD", "--not", "--remotes"]);
     const etiquetas = etiquetasGit({ porcelain: st.stdout, sinPush: push.stdout, ultimoCommit: (parseInt(ct.stdout, 10) || 0) * 1000, rama });
     const common = top.stdout.trim();
-    return { dir: l.dir, spaceId: l.spaceId, nombre: l.nombre, personal: l.personal, common, repo: nombreRepo(common), rama, ticket: ticketDe(rama), etiquetas };
+    // Auditoría de /auditar: críticas + altas de <raíz>/.claude/auditoria/ultima.json (0 si no hay)
+    let vulns = 0;
+    if (raiz.code === 0 && raiz.stdout.trim()) {
+      const u = await exec("sh", ["-c", 'cat "$1/.claude/auditoria/ultima.json" 2>/dev/null', "sh", raiz.stdout.trim()]);
+      vulns = vulnerabilidadesGraves(u.stdout);
+    }
+    return { vulns, dir: l.dir, spaceId: l.spaceId, nombre: l.nombre, personal: l.personal, common, repo: nombreRepo(common), rama, ticket: ticketDe(rama), etiquetas };
   }
 
   async combinar() {
@@ -169,6 +176,7 @@ export default class Pendientes extends View {
       const et = [...i.etiquetas];
       if (vivos.some((a) => a.space === i.spaceId && a.status === "blocked")) et.unshift("agente-esperando");
       if (et.length) det.push({ id: `git:${i.dir}`, titulo: sinMe(i.nombre), repo: i.repo, rama: i.rama, ticket: i.ticket, etiquetas: et, dir: i.dir, spaceId: i.spaceId, personal: i.personal });
+      if (i.vulns > 0) det.push({ id: `vuln:${i.dir}`, titulo: tituloVulnerabilidades(i.vulns), repo: i.repo, rama: i.rama, ticket: i.ticket, etiquetas: ["vulnerabilidad"], dir: i.dir, spaceId: i.spaceId, personal: i.personal });
     }
     det.push(...this.prs);
     const nuevo = reconciliar(base, det, Date.now());
@@ -203,6 +211,7 @@ export default class Pendientes extends View {
       { id: "nuevo", etiqueta: "Nuevo pendiente" },
       { id: "cerrar", etiqueta: "Cerrar pendiente" },
       { id: "pr", etiqueta: "Abrir PR del space actual" },
+      { id: "auditoria", etiqueta: "Auditoría de seguridad" },
     ].filter((a) => !texto || puntuar(texto, a.etiqueta) >= 0);
     filas.push(...acciones.map((a) => ({ tipo: "accion", a })));
     return filas;
@@ -216,7 +225,10 @@ export default class Pendientes extends View {
         const r = act ? (shared("pendientes.ramas") ?? {})[lugar(act, panes())] : null;
         Object.assign(this, { modo: "nuevo", paso: 0, form: { repoPorDefecto: r?.repo ?? "" }, q: "", at: 0 });
       } else if (fila.a.id === "cerrar") Object.assign(this, { modo: "cerrar", q: "", at: 0 });
-      else {
+      else if (fila.a.id === "auditoria") {
+        openOverlay({ mod: "mi-auditoria", kind: "dialog", width: 820, height: 600 });
+        closeOverlay(props()?.overlay);
+      } else {
         const act = spaces().find((s) => s.active);
         const dir = act && lugar(act, panes());
         if (dir) exec("sh", ["-c", `${ghEnv(esPersonal(act.name))}gh pr view --web`], { cwd: dir }).catch(() => {});
@@ -240,6 +252,11 @@ export default class Pendientes extends View {
       return;
     }
     if (it.cerrado) return;
+    if ((it.etiquetas ?? []).includes("vulnerabilidad")) {
+      openOverlay({ mod: "mi-auditoria", kind: "dialog", width: 820, height: 600, props: { spaceId: it.spaceId } });
+      closeOverlay(props()?.overlay);
+      return;
+    }
     if (it.pr) exec("sh", ["-c", `${ghEnv(it.personal)}gh pr view ${Number(it.pr)} --web`], { cwd: it.dir }).catch(() => {});
     else if (!saltar(it)) return;
     closeOverlay(props()?.overlay);
