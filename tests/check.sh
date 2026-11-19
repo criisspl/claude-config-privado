@@ -40,7 +40,7 @@ ver="$(tr -d '[:space:]' < "$REPO/VERSION")"
 [[ "$ver" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || mal "VERSION no es X.Y.Z ($ver)"
 grep -q "^## $ver" "$REPO/CHANGELOG.md" || mal "CHANGELOG.md no tiene la sección ## $ver"
 
-# 5. Tests del comando claude-config
+# 5. Tests del comando claude-config (incluye el lint de packs y hooks: tests/lint.test.mjs)
 node --test "$REPO"/tests/*.test.mjs >/dev/null || mal "fallan los tests de claude-config (node --test tests/*.test.mjs)"
 
 # 6. install.sh sin instalar herramientas: PATH mínimo (sin npm, uv, brew ni claude)

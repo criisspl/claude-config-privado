@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # PostToolUse: guarda la última consulta SQL (MCP de BD o mysql/psql/sqlite3 por Bash) para el mod mi-db de herdr-app.
 # Guarda también el terminal (HC_TERMINAL_ID) para que el panel solo salga en su pestaña. Escribe ~/.config/herdr-app/data/db-ultima.json. Nunca bloquea (exit 0).
+command -v python3 >/dev/null 2>&1 || exit 0
 exec python3 -c '
 import json, os, re, sys, time
 try:
