@@ -1,0 +1,1 @@
+../../../hooks/gh-account-check.sh

@@ -1,0 +1,3 @@
+[
+  {"RuleID": "generic-api-key", "Description": "Detected a Generic API Key", "File": "src/config.js", "StartLine": 7, "Secret": "REDACTED", "Match": "REDACTED", "Fingerprint": "src/config.js:generic-api-key:7"}
+]

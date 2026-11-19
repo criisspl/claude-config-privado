@@ -2,6 +2,7 @@
 name: visual
 description: Trabaja con diseños de Figma - lee un diseño, extrae medidas, tokens y componentes, y compara lo implementado con el diseño. Úsalo para que las herramientas de Figma no carguen en el hilo principal. No escribe código de producto.
 model: sonnet
+effort: medium
 maxTurns: 25
 mcpServers:
   - figma

@@ -1,0 +1,186 @@
+# hook<TAB>esperado(block|allow)<TAB>comando
+git-safety.sh	block	git push -f
+git-safety.sh	block	git push --force
+git-safety.sh	block	git push -f origin feat
+git-safety.sh	block	git push origin feat --force
+git-safety.sh	block	git push --force-with-lease origin feat
+git-safety.sh	block	git push -f origin main
+git-safety.sh	block	git push --force origin master
+git-safety.sh	block	git push origin +main
+git-safety.sh	block	git push origin +feat
+git-safety.sh	block	git push -u origin +HEAD:feat
+git-safety.sh	block	git push origin 'x' +feat
+git-safety.sh	block	git push origin "+feat"
+git-safety.sh	block	git -C . push -f
+git-safety.sh	block	git -C /tmp/x push origin +feat
+git-safety.sh	block	git -c k=v push --force
+git-safety.sh	block	git --no-pager push -f
+git-safety.sh	block	git --git-dir=.git push -f
+git-safety.sh	block	git --git-dir .git push origin +x
+git-safety.sh	block	cd x && git push -f
+git-safety.sh	block	true; git push --force
+git-safety.sh	block	git push origin main
+git-safety.sh	block	git push origin master
+git-safety.sh	block	git push origin HEAD:main
+git-safety.sh	block	git push origin feat:master
+git-safety.sh	block	git push -u origin HEAD:main
+git-safety.sh	block	git -C . push origin main
+git-safety.sh	block	git -C x push origin HEAD:main
+git-safety.sh	block	git -c k=v push origin main
+git-safety.sh	block	git --no-pager push origin master
+git-safety.sh	block	git push origin main && echo ok
+git-safety.sh	block	git add . && git push origin main
+git-safety.sh	block	git reset --hard
+git-safety.sh	block	git reset --hard HEAD~1
+git-safety.sh	block	git reset --hard origin/main
+git-safety.sh	block	git -C x reset --hard
+git-safety.sh	block	git -c a=b reset --hard
+git-safety.sh	block	git checkout -- .
+git-safety.sh	block	git checkout .
+git-safety.sh	block	git checkout HEAD .
+git-safety.sh	block	git checkout HEAD -- .
+git-safety.sh	block	git restore .
+git-safety.sh	block	git restore -- .
+git-safety.sh	block	git restore --worktree .
+git-safety.sh	block	git restore --staged --worktree .
+git-safety.sh	block	git restore --source=HEAD~1 .
+git-safety.sh	block	git -C x restore .
+git-safety.sh	block	git -C x checkout .
+git-safety.sh	block	git clean -f
+git-safety.sh	block	git clean -fd
+git-safety.sh	block	git clean -xfd
+git-safety.sh	block	git clean -d -f
+git-safety.sh	block	git -C x clean -fd
+git-safety.sh	block	git branch -D main
+git-safety.sh	block	git branch -D master
+git-safety.sh	block	git branch -d develop
+git-safety.sh	block	git branch --delete -D main
+git-safety.sh	block	git commit --no-verify -m x
+git-safety.sh	block	git commit -m x --no-verify
+git-safety.sh	block	git commit -n -m x
+git-safety.sh	block	git commit -m x -n
+git-safety.sh	block	git commit -nm x
+git-safety.sh	block	git commit -anm x
+git-safety.sh	block	git -C . commit -n -m x
+git-safety.sh	block	git commit --amend -n
+git-safety.sh	block	git add . && git commit -n -m x
+git-safety.sh	allow	git status
+git-safety.sh	allow	git diff
+git-safety.sh	allow	git log --oneline
+git-safety.sh	allow	git add .
+git-safety.sh	allow	git commit -m 'feat: x'
+git-safety.sh	allow	git commit -m "fix -n flag"
+git-safety.sh	allow	git commit -m 'explica --no-verify'
+git-safety.sh	allow	git commit -mnote
+git-safety.sh	allow	git commit --amend -m x
+git-safety.sh	allow	git commit -am 'x -n y'
+git-safety.sh	allow	git commit -F msg.txt
+git-safety.sh	allow	git push origin feat
+git-safety.sh	allow	git push -u origin feat
+git-safety.sh	allow	git push origin feat/main-ajuste
+git-safety.sh	allow	git push origin HEAD:feat
+git-safety.sh	allow	git push origin feat:feat2
+git-safety.sh	allow	git push --set-upstream origin mi-rama
+git-safety.sh	allow	git -c k=v push origin feat
+git-safety.sh	allow	git -C x push origin feat
+git-safety.sh	allow	git push origin v1.0.0
+git-safety.sh	allow	git push --tags
+git-safety.sh	allow	git restore --staged file
+git-safety.sh	allow	git restore --staged .
+git-safety.sh	allow	git restore src/a.ts
+git-safety.sh	allow	git restore -S file
+git-safety.sh	allow	git checkout -b x
+git-safety.sh	allow	git checkout feat
+git-safety.sh	allow	git checkout feat/x-y
+git-safety.sh	allow	git checkout -- src/a.ts
+git-safety.sh	allow	git checkout main
+git-safety.sh	allow	git checkout ./src
+git-safety.sh	allow	git reset --soft HEAD~1
+git-safety.sh	allow	git reset HEAD file
+git-safety.sh	allow	git reset --mixed HEAD~1
+git-safety.sh	allow	git clean -n
+git-safety.sh	allow	git clean --dry-run -d
+git-safety.sh	allow	git branch -d feat
+git-safety.sh	allow	git branch -D feat/x
+git-safety.sh	allow	git branch -a
+git-safety.sh	allow	git stash
+git-safety.sh	allow	git stash pop
+git-safety.sh	allow	git fetch origin main
+git-safety.sh	allow	git pull origin main
+git-safety.sh	allow	git merge main
+git-safety.sh	allow	git rebase main
+git-safety.sh	allow	git diff main..feat
+git-safety.sh	allow	git log main..HEAD
+git-safety.sh	allow	git -C x status
+git-safety.sh	allow	git --no-pager log
+rm-safety.sh	block	rm -rf /
+rm-safety.sh	block	rm -rf /*
+rm-safety.sh	block	rm -rf ~
+rm-safety.sh	block	rm -rf ~/
+rm-safety.sh	block	rm -rf ~/*
+rm-safety.sh	block	rm -rf $HOME
+rm-safety.sh	block	rm -rf ${HOME}
+rm-safety.sh	block	rm -rf "$HOME"
+rm-safety.sh	block	rm -rf .
+rm-safety.sh	block	rm -rf ./
+rm-safety.sh	block	rm -rf ..
+rm-safety.sh	block	rm -rf ../
+rm-safety.sh	block	rm -rf *
+rm-safety.sh	block	rm -rf ./*
+rm-safety.sh	block	rm -fr /
+rm-safety.sh	block	rm -r -f /
+rm-safety.sh	block	rm -Rf /home
+rm-safety.sh	block	rm -rf /home/user
+rm-safety.sh	block	rm -rf /home/user/
+rm-safety.sh	block	rm --recursive --force /
+rm-safety.sh	block	rm -r /
+rm-safety.sh	block	rm -rf -- /
+rm-safety.sh	block	sudo rm -rf /
+rm-safety.sh	block	cd x && rm -rf *
+rm-safety.sh	block	ls; rm -rf ~
+rm-safety.sh	block	echo a | rm -rf .
+rm-safety.sh	block	(rm -rf /)
+rm-safety.sh	block	rm -rf / --no-preserve-root
+rm-safety.sh	block	rm --no-preserve-root -rf /
+rm-safety.sh	block	psql -c 'DROP TABLE users'
+rm-safety.sh	block	mysql -e "DROP DATABASE app"
+rm-safety.sh	block	psql -c "drop schema public cascade"
+rm-safety.sh	block	echo 'TRUNCATE TABLE t' | psql
+rm-safety.sh	block	liquibase dropAll
+rm-safety.sh	block	liquibase --url=x drop-all
+rm-safety.sh	allow	rm -rf node_modules
+rm-safety.sh	allow	rm -rf dist
+rm-safety.sh	allow	rm -rf ./dist
+rm-safety.sh	allow	rm -rf /tmp/x
+rm-safety.sh	allow	rm file.txt
+rm-safety.sh	allow	rm -r build/
+rm-safety.sh	allow	rm -rf .next
+rm-safety.sh	allow	rm -rf ~/proj/node_modules
+rm-safety.sh	allow	rm -rf src/*
+rm-safety.sh	allow	rm -f *.log
+rm-safety.sh	allow	rm -rf .git/worktrees/x
+rm-safety.sh	allow	rm -rf coverage .cache
+rm-safety.sh	allow	rm -rf /home/user/proj/dist
+rm-safety.sh	allow	rm -rf ../other-dir
+rm-safety.sh	allow	rm -rf ./build/*
+rm-safety.sh	allow	ls /home
+rm-safety.sh	allow	ls -la ~
+rm-safety.sh	allow	echo DROPPED
+rm-safety.sh	allow	select * from tables
+rm-safety.sh	allow	psql -c 'SELECT 1'
+rm-safety.sh	allow	rm -i foo
+rm-safety.sh	allow	rmdir x
+rm-safety.sh	allow	cat rm-rf.txt
+rm-safety.sh	allow	npm run clean
+rm-safety.sh	allow	liquibase update
+rm-safety.sh	allow	git rm -r --cached dist
+rm-safety.sh	block	rm -rf "/"
+rm-safety.sh	block	rm -rf '/'
+rm-safety.sh	block	rm -rf "~"
+rm-safety.sh	block	rm -rf /usr
+rm-safety.sh	block	rm -rf /etc/
+rm-safety.sh	block	rm -rf /Users
+rm-safety.sh	block	sudo rm -rf /var
+rm-safety.sh	allow	rm -rf /usr/local/tmp/build
+rm-safety.sh	allow	rm -rf "dist"
+rm-safety.sh	allow	rm -rf /var/folders/xx/tmp123

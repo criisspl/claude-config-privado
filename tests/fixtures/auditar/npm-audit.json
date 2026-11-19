@@ -1,0 +1,20 @@
+{
+  "auditReportVersion": 2,
+  "vulnerabilities": {
+    "lodash": {
+      "name": "lodash", "severity": "high", "isDirect": true,
+      "via": [{"source": 1, "name": "lodash", "title": "Command Injection in lodash", "url": "https://github.com/advisories/GHSA-aaaa-aaaa-aaaa", "severity": "high"}],
+      "fixAvailable": {"name": "lodash", "version": "4.17.21", "isSemVerMajor": false}
+    },
+    "minimist": {
+      "name": "minimist", "severity": "critical", "isDirect": false,
+      "via": [{"source": 2, "name": "minimist", "title": "Prototype Pollution in minimist", "url": "https://github.com/advisories/GHSA-bbbb-bbbb-bbbb", "severity": "critical"}],
+      "fixAvailable": true
+    },
+    "express": {
+      "name": "express", "severity": "moderate", "isDirect": true,
+      "via": ["qs", {"source": 3, "name": "qs", "title": "qs denial of service", "url": "https://github.com/advisories/GHSA-cccc-cccc-cccc", "severity": "moderate"}],
+      "fixAvailable": false
+    }
+  }
+}

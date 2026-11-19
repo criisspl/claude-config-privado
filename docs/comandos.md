@@ -23,6 +23,14 @@ Vienen con Claude Code; no hay que instalar nada. Lista completa: <https://code.
 | `/rewind` | Volver atrás (conversación y/o código) a un checkpoint. |
 | `/debug [qué pasa]` | Diagnosticar la propia sesión (herramientas que fallan, etc.). |
 
+## Seguridad
+
+| Comando | Para qué |
+| --- | --- |
+| `/auditar` | Audita el proyecto con los escáneres instalados (`npm audit`, `osv-scanner`, `semgrep`, `gitleaks`), resume por severidad y propone el arreglo de lo crítico y alto. Deja `.claude/auditoria/ultima.json` y `historial.jsonl` (ignorados por git) para el panel de Herdr. `/auditar arreglar <id>` o `arreglar criticos` aplica los arreglos y vuelve a auditar. Sin los escáneres, los marca `no-disponible` y dice cómo instalarlos; no instala nada. |
+
+El script también se puede lanzar suelto en la raíz de un proyecto: `skills/auditar/auditar.sh [--ci]`. Con `--ci` sale con 1 si hay críticos nuevos respecto a la ejecución anterior.
+
 ## Tokens y contexto
 
 | Comando | Para qué |

@@ -181,6 +181,19 @@
               }
             },
             {
+              "id": "pendientes",
+              "type": "block",
+              "content": {
+                "mod": "mi-pendientes",
+                "props": {
+                  "barra": true
+                }
+              },
+              "size": {
+                "px": 130
+              }
+            },
+            {
               "id": "live-ports",
               "type": "block",
               "content": {

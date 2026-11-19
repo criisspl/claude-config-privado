@@ -1,6 +1,11 @@
 import { View, div, svg, image } from "gpui-kit";
 import { h_flex, ScrollHandle } from "gpui-base";
-import { spaces, panes, run, openOverlay, theme, window, shared, layout, settings, exec, home } from "herdr";
+import { spaces, panes, agents, run, openOverlay, theme, window, shared, layout, settings, exec, home } from "herdr";
+
+// Cuenta personal: cw nombra el space «me · …». Mismo acento que mi-agents y mi-pendientes.
+const PERSONAL = "#f0a0c8";
+const esPersonal = (n) => /^me\s*·\s*/i.test(n ?? "");
+const dur = (ms) => { const m = Math.floor(ms / 60000); return m < 1 ? "<1m" : m < 60 ? `${m}m` : m < 1440 ? `${Math.floor(m / 60)}h` : `${Math.floor(m / 1440)}d`; };
 
 function find(node, id) {
   if (node?.id === id) return node;
@@ -28,7 +33,8 @@ function label(tab, lead) {
 }
 
 export default class Tabs extends View {
-  init() {
+  init(_props, cx) {
+    cx.timer.every(30000, (cx) => cx.notify()); // el tiempo trabajando avanza solo
     this.pressed = null;
     this.scroll = ScrollHandle.new();
     try { this.panels = JSON.parse(localStorage.getItem("panels") ?? "{}"); } catch { this.panels = {}; }
@@ -98,6 +104,10 @@ export default class Tabs extends View {
       this.selectedIndex = active;
       if (active >= 0) this.scroll.scroll_to_item(active);
     }
+    const personal = esPersonal(space?.name);
+    const ags = agents();
+    const desde = shared("agents.desde") ?? {}; // lo escribe mi-agents
+    const ramas = shared("pendientes.ramas") ?? {}; // lo escribe mi-pendientes
     const stop = (_e, cx) => cx.stop_propagation();
     const button = (id, label, action) => div().id(id).size(26).flex_none().flex().items_center().justify_center().rounded(6).text_color(t.dim).hover(s => s.bg(t.hover).text_color(t.foreground))
       .on_mouse_down("left", stop).on_click(action).child(label);
@@ -105,10 +115,14 @@ export default class Tabs extends View {
       const lead = panes().find(p => p.tab === c.id && p.program?.agent) ?? panes().find(p => p.tab === c.id);
       const program = lead?.program;
       const name = label(c, lead);
+      const rama = ramas[lead?.cwd];
+      const chip = rama ? (rama.ticket ?? rama.rama) : null;
+      const ag = c.status === "working" || c.status === "blocked" ? ags.find((a) => a.tab === c.id) : null;
+      const hace = ag && desde[ag.address]?.at ? dur(Date.now() - desde[ag.address].at) : null;
       return h_flex().id(`tab-${c.id}`).h(29).px(10).gap(7).rounded(7).items_center().flex_none().text_size(12.8)
         // A rename or status dot on this or an earlier tab can push the active one out.
         .when(i <= active, el => el.on_size_change((_size, cx) => { this.scroll.scroll_to_item(active); cx.notify(); }))
-        .border(1).border_color(c.active ? t.border : t.chrome).bg(c.active ? t.raised : t.chrome).text_color(c.active ? t.foreground : t.muted)
+        .border(1).border_color(c.active ? (personal ? PERSONAL : t.border) : t.chrome).bg(c.active ? t.raised : t.chrome).text_color(c.active ? t.foreground : t.muted)
         .hover(s => s.bg(t.hover))
         .on_mouse_down("left", (e, cx) => { cx.stop_propagation(); this.pressed = i; if (e.click_count === 2) run("tab.rename", { id: c.id }); })
         .on_mouse_up("left", () => {
@@ -119,6 +133,8 @@ export default class Tabs extends View {
         .on_mouse_down("right", (_e, cx) => { cx.stop_propagation(); openOverlay({ mod: "menu", kind: "popup", width: 200, props: { tab: "tab", target: { id: c.id, space: space.id } } }); })
         .when(Boolean(program?.icon), el => el.child(program.tint ? svg(program.icon).size(14).text_color(t.muted) : image(program.icon).size(14)))
         .child(div().max_w(170).truncate().child(c.zoomed ? `${name} Z` : name))
+        .when(Boolean(chip), el => el.child(div().max_w(96).truncate().text_size(11).text_color(t.dim).tooltip(rama.rama).child(chip)))
+        .when(Boolean(hace), el => el.child(div().text_size(11).text_color(t.dim).child(hace)))
         .when(c.status === "working", el => el.child(svg("mods/workspace-chrome/spinner.svg").size(12).flex_none().text_color(t.working).spin(900)))
         .when(c.status === "blocked" || c.status === "done", el => el.child(div().size(6).rounded(3).bg(t[c.status])))
         .when(c.active, el => el.child(div().id(`close-${c.id}`).text_color(t.dim).on_mouse_down("left", stop).on_click((_e, cx) => { cx.stop_propagation(); run("tab.close", { id: c.id }); }).child(svg("mods/pane/close.svg").size(12))));
@@ -144,6 +160,7 @@ export default class Tabs extends View {
     return h_flex().size_full().min_w(0).px(10).pl(lightsPadding).gap(3).items_center().bg(t.chrome).border_b(1).border_color(t.border)
       .on_mouse_up("left", () => { this.pressed = null; })
       .on_scroll_wheel(e => this.wheel(e))
+      .when(personal, el => el.child(div().flex_none().px(6).h(18).rounded(5).bg(PERSONAL + "26").text_size(10.5).text_color(PERSONAL).flex().items_center().child("personal")))
       .child(h_flex().id("tab-scroll").flex_1().min_w(0).h_full().items_center().gap(3).overflow_x_scrollbar().track_scroll(this.scroll)
         .on_size_change((_size, cx) => { if (active >= 0) { this.scroll.scroll_to_item(active); cx.notify(); } })
         .children(shown.map(item)))
