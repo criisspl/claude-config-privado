@@ -11,6 +11,7 @@ claude-config list          # catálogo: ✓ instalado · detectado
 claude-config add zod       # añadir
 claude-config remove zod    # quitar
 claude-config status        # versión, paquetes, ficheros que has cambiado, sugerencias
+claude-config check         # para CI: sale 1 si hay ficheros editados a mano o el proyecto va por detrás de la librería
 claude-config update        # baja la última versión publicada y actualiza el proyecto
 ```
 

@@ -6,6 +6,10 @@ Cada versión publicada tiene su sección `## X.Y.Z`. Al subir `VERSION` en `mai
 - **Menor** (1.1.0): paquetes o skills nuevos, reglas nuevas.
 - **Parche** (1.0.1): correcciones de texto o de errores.
 
+## 1.9.0
+
+- Comando nuevo `claude-config check`, para CI: sale 1 si hay ficheros instalados editados a mano o si la versión del proyecto (`.claude/claude-config.json`) no es la de la librería; los paquetes detectados y sin instalar solo avisan. `status` sigue siendo informativo.
+
 ## 1.8.4
 
 - Lint de packs y hooks en `tests/lint.test.mjs`: una skill citada en un pack debe instalarse con él, los enlaces relativos no pueden estar rotos ni salir del pack, y un hook que usa `python3`, `node`, `npx`, `rtk`, `codegraph` o `docker` comprueba `command -v` antes.
