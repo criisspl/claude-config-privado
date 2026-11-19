@@ -8,7 +8,7 @@ set -uo pipefail
 input=$(cat)
 cwd=""
 command -v jq >/dev/null 2>&1 && cwd=$(echo "$input" | jq -r '.cwd // ""')
-[[ -n "$cwd" ]] && cd "$cwd" 2>/dev/null
+[[ -n "$cwd" ]] && { cd "$cwd" 2>/dev/null || true; }
 
 common=$(git rev-parse --git-common-dir 2>/dev/null) || exit 0
 gitdir=$(git rev-parse --git-dir 2>/dev/null) || exit 0

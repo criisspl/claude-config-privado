@@ -142,7 +142,7 @@ if [[ -n "${HC_TERMINAL_ID:-}" && -z "${HERDR_ENV:-}" ]] && command -v herdr-app
   # herdr-app: el space se crea con `space.new`; los worktrees los anida la app bajo su repo.
   sp=$(herdr-app ls 2>/dev/null | jq -r --arg n "$title" '.spaces[]|select(.name==$n)|.id' | head -1)
   if [[ -n "$sp" ]]; then
-    herdr-app do space.select "$(jq -nc --arg id "$sp" '{id:$id}')" >/dev/null
+    herdr-app "do" space.select "$(jq -nc --arg id "$sp" '{id:$id}')" >/dev/null
     echo "Ya estaba abierto: $title" >&2
   else
     [[ -n "$agent" && -n "$prompt" ]] && prompt="$prompt Al terminar, avisa a la sesión de origen con: hc send $HC_TERMINAL_ID 'TERMINADO $title: <resumen corto>' SOLO si necesita algo (decisión, bloqueo, PR abierta, resultado del que dependa otro paso); si no, no avisas. Actualiza tú artifact/Jira/Confluence si hace falta. Usa el mínimo de agentes, uno por rol aunque toques varios repos."
@@ -150,7 +150,7 @@ if [[ -n "${HC_TERMINAL_ID:-}" && -z "${HERDR_ENV:-}" ]] && command -v herdr-app
     envp=""
     [[ $personal == 1 ]] && envp="env CLAUDE_CONFIG_DIR=$CLAUDE_CONFIG_DIR GH_CONFIG_DIR=$GH_CONFIG_DIR GIT_CONFIG_GLOBAL=$GIT_CONFIG_GLOBAL "
     cmd="${agent:+$envp$agent${prompt:+ $(printf '%q' "$prompt")}; }exec bash"
-    herdr-app do space.new "$(jq -nc --arg n "$title" --arg f "$dir" --arg c "$cmd" '{name:$n,folder:$f,focus:true,argv:["bash","-lc",$c]}')" >/dev/null
+    herdr-app "do" space.new "$(jq -nc --arg n "$title" --arg f "$dir" --arg c "$cmd" '{name:$n,folder:$f,focus:true,argv:["bash","-lc",$c]}')" >/dev/null
   fi
 elif [[ -n "${HERDR_ENV:-}" ]] && command -v herdr >/dev/null; then
   if [[ -n "$wt" ]]; then
@@ -165,7 +165,8 @@ elif [[ -n "${HERDR_ENV:-}" ]] && command -v herdr >/dev/null; then
   elif [[ -n "$agent" && -n "$pane" ]]; then
     kind=${agent%-agent}
     # Claude tarda en arrancar con hooks y MCPs: margen amplio, y si ya está vivo no se reenvía nada
-    herdr agent start "$kind" --kind "$kind" --pane "$pane" --timeout 120000 ${prompt:+-- "$prompt"} >/dev/null 2>&1 \
+    pa=(); [[ -n "$prompt" ]] && pa=(-- "$prompt")
+    herdr agent start "$kind" --kind "$kind" --pane "$pane" --timeout 120000 ${pa[@]+"${pa[@]}"} >/dev/null 2>&1 \
       || herdr pane get "$pane" | jq -e '.result.pane.agent' >/dev/null \
       || herdr pane send-text "$pane" "$agent"$'\n'
   fi
