@@ -11,6 +11,13 @@ Mi configuración de Herdr. Se copia a `~/.config/herdr-app` (por ejemplo `cp -r
 - Acciones: «Nuevo pendiente» (título, repo, etiquetas), «Cerrar pendiente» (manuales) y «Abrir PR del space actual». Enter en una PR la abre en el navegador; en el resto salta al space o agente.
 - Los pendientes (abiertos y cerrados, con fechas) se guardan en `~/.config/herdr-app/pendientes.json`.
 
+## mi-auditoria (nuevo)
+
+- Panel con la auditoría de seguridad del space activo (la escribe `/auditar` en `.claude/auditoria/` del repo): proyecto, rama, fecha, escáneres, barras por severidad y por tipo, evolución de las últimas 12 ejecuciones y lista de hallazgos.
+- Se abre desde la paleta de pendientes («Auditoría de seguridad») o con Enter en un pendiente `vulnerabilidad`. Sin tecla propia.
+- Flechas para moverte; Enter en un hallazgo manda `/auditar arreglar <id>` al agente del space; «Volver a auditar» manda `/auditar`. Esc cierra. El envío usa `herdr pane send-text`, como `cw`.
+- Pendientes: cada space con críticas o altas tiene un pendiente automático `vulnerabilidad` que se cierra solo al llegar a 0.
+
 ## Cambiados
 
 - `mi-agents`: cada fila muestra ticket (o rama), estado en palabras y tiempo (`trabajando 12m`, `esperando 3m`, `listo 1h`).
