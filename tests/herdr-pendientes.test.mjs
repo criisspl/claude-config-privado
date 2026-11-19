@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import * as L from "../herdr-app/mods/mi-pendientes/logica.js";
+import * as L from "../herdr-app/mods/mi-issues/logica.js";
 
 const D = 86400000;
 const it = (o) => ({ id: o.id ?? "x", tipo: "auto", titulo: "t", repo: "web", etiquetas: [], creado: 1000, cerrado: null, ...o });

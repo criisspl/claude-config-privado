@@ -26,26 +26,39 @@
           "type": "column",
           "children": [
             {
+              "id": "pendientes",
+              "type": "block",
+              "content": {
+                "mod": "mi-pendientes",
+                "props": {
+                  "compact": true
+                }
+              },
+              "size": {
+                "px": 26
+              },
+              "min": 26
+            },
+            {
               "id": "spaces",
               "type": "block",
               "content": {
                 "mod": "mi-spaces"
               },
               "size": {
-                "weight": 1
+                "px": 200
               },
               "min": 90
             },
             {
-              "id": "agents",
+              "id": "panel-resumen",
               "type": "block",
-              "content": {
-                "mod": "mi-agents"
-              },
               "size": {
                 "weight": 1
               },
-              "min": 90
+              "content": {
+                "mod": "mi-panel-resumen"
+              }
             }
           ]
         },
@@ -75,6 +88,19 @@
       "id": "work",
       "type": "column",
       "children": [
+        {
+          "id": "franja",
+          "type": "block",
+          "content": {
+            "mod": "mi-cuenta",
+            "props": {
+              "franja": true
+            }
+          },
+          "size": {
+            "px": 3
+          }
+        },
         {
           "id": "tabs",
           "type": "block",
@@ -181,16 +207,36 @@
               }
             },
             {
-              "id": "pendientes",
+              "id": "cuenta",
               "type": "block",
               "content": {
-                "mod": "mi-pendientes",
+                "mod": "mi-cuenta"
+              },
+              "size": {
+                "px": 96
+              }
+            },
+            {
+              "id": "usage",
+              "type": "block",
+              "content": {
+                "mod": "mi-uso-barra"
+              },
+              "size": {
+                "px": 260
+              }
+            },
+            {
+              "id": "issues",
+              "type": "block",
+              "content": {
+                "mod": "mi-issues",
                 "props": {
                   "barra": true
                 }
               },
               "size": {
-                "px": 130
+                "px": 110
               }
             },
             {
@@ -204,16 +250,6 @@
               }
             }
           ]
-        },
-        {
-          "id": "usage",
-          "type": "block",
-          "content": {
-            "mod": "mi-uso-barra"
-          },
-          "size": {
-            "px": 96
-          }
         }
       ],
       "resizable": false

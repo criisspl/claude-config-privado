@@ -1,11 +1,12 @@
 // Workspace spaces: stable colored avatars, worktrees under their checkout,
 // grouped by machine when more than one is known. After a space's name, the repo
-// its first terminal is in now, only where unusual: branch, ahead/behind. Agent state lives in the agents list, not here. Click to
-// switch, right-click for its menu, drag to reorder.
+// its first terminal is in now, only where unusual: branch, ahead/behind. Under each space, one sub-row per agent
+// (name, time, state dot; click focuses its pane). Click to switch, right-click for its menu, drag to reorder.
 
-import { View, div, svg } from "gpui-kit";
+import { View, div, svg, image } from "gpui-kit";
 import { v_flex, h_flex, ScrollHandle } from "gpui-base";
-import { spaces, machines, panes, run, openOverlay, exec, hc, theme, shared, setShared, watchFolder, window, layout } from "herdr";
+import { spaces, machines, panes, run, openOverlay, exec, hc, theme, shared, setShared, watchFolder, window, layout, agents, checking, notify, playSound } from "herdr";
+import { PortScanner, forwards, openPort, stopForward } from "./ports.js";
 
 function find(node, id) {
   if (node?.id === id) return node;
@@ -18,6 +19,67 @@ function find(node, id) {
 
 // The sidebar's rail goes by its width, not a flag: dragging its edge narrows it too.
 const narrow = () => (find(layout(), "sidebar")?.size?.px ?? Infinity) < 160;
+
+// To the rail (on macOS wide enough for the traffic lights), or back to the width it had.
+function toggleSidebar() {
+  const width = find(layout(), "sidebar")?.size?.px;
+  if (!narrow()) setShared("sidebar.width", width);
+  // Mods edited before the rail went by width still read the flag.
+  setShared("sidebar.collapsed", !narrow());
+  run("layout.resize", { id: "sidebar", px: narrow() ? (shared("sidebar.width") ?? 268) : window()?.platform === "macos" ? 76 : 44 });
+}
+
+// Drops what an agent puts before its title: a status glyph or spinner and its separator.
+const clean = (s) => (s ?? "").replace(/^[^\p{L}\p{N}\p{Ps}\p{Pi}]+/u, "").replace(/^\[ [!.] \] /, "").trim();
+const ROLES = { mecanico: "PO", buscador: "UX", implementador: "Senior", "revisor-pr": "QA", planificador: "Tech Lead" }; // agente -> rol de la oficina
+const AGENT_ROW = 26;
+
+// Estado: comecocos animado trabajando, tick al terminar, ? si necesita algo, anillo si espera.
+const pacman = (k, n = 14) => {
+  const ly = (f) => image(`mods/mi-spaces/pac/${f}.svg`).absolute().top(0).left(0).w(n).h(n);
+  return div().relative().w(n).h(n).flex_none().child(ly(`${k}-a`)).child(ly(`${k}-b`).loop("opacity", { from: 0, to: 1, period: 600, easing: "linear" }));
+};
+const statusMark = (a) => {
+  if (a.status === "working") return pacman(`pac${[...String(a.address)].reduce((x, c) => x + c.charCodeAt(0), 0) % 6}`, 16);
+  if (a.status === "done" || a.status === "idle") return div().w(16).flex_none().text_size(15).text_color("#2dffa0").child("\u2713");
+  if (a.status === "blocked") return div().w(16).flex_none().text_size(15).font_semibold().text_color("#ff5fcf").child("?");
+  return div().size(6).flex_none().rounded(3).border(1).border_color("#c58bff").opacity(0.6);
+};
+
+// Iconos por palabras del título (el primero que coincide gana); si no, el del programa.
+const ICONOS = [
+  [/\b(pr|review|merge|pull)\b/i, "git-pull-request", "#c58bff"], [/bug|fix|error|incidenc|fallo|hotfix/i, "bug", "#ff5577"],
+  [/test|qa\b|prueba|aduana/i, "flask-conical", "#2dffa0"], [/deploy|release|despliegue|publica/i, "rocket", "#ffb02e"],
+  [/\b(vpo|vpb|vpa)-\d+|ticket|jira/i, "ticket", "#9cc0e8"], [/dise|design|estilo|personaliz|tema|herdr|css|ui\b/i, "palette", "#ff5fcf"],
+  [/mail|correo|braze|newsletter/i, "mail", "#ecd49a"], [/checkout|pago|pay|esim|compra|reserva/i, "shopping-cart", "#9cd4cc"],
+  [/segur|secur|auth|login|token/i, "shield", "#a8aee8"], [/refactor|wip|config|setup|migra/i, "wrench", "#e8d08a"],
+  [/busca|search|investig|analis|an[aá]lisis/i, "search", "#8cc8e8"], [/web|front|pdp|pagina|landing/i, "globe", "#a8d8a0"],
+  [/chat|talent|digest|revi|presenta/i, "message-square", "#d0a8e8"],
+];
+const iconColor = (texto, fallback) => ICONOS.find(([re]) => re.test(texto))?.[2] ?? fallback;
+const agentIcon = (a, texto, color) => {
+  const hit = ICONOS.find(([re]) => re.test(texto));
+  if (hit) return svg(`mods/mi-spaces/icons/${hit[1]}.svg`).size(12).flex_none().text_color(a.status === "blocked" ? color : hit[2]);
+  const p = a.program;
+  if (p?.icon) return p.tint ? svg(p.icon).size(12).flex_none().text_color(color) : image(p.icon).w(12).h(12).flex_none();
+  return svg("mods/mi-spaces/icons/sparkles.svg").size(12).flex_none().text_color(color);
+};
+const SUBBOT = { mecanico: 1, buscador: 3, implementador: 2, "revisor-pr": 4, experto: 0, planificador: 0 }; // cabeza de robot (colores de los bots)
+const botHead = (k) => {
+  const ly = (f) => image(`mods/mi-panel-resumen/bot${k}-${f}.svg`).absolute().top(0).left(0).w(14).h(14);
+  return div().relative().w(14).h(14).flex_none().child(ly("a")).child(ly("b").loop("opacity", { from: 0, to: 1, period: 600, easing: "linear" }));
+};
+const PANEL = "http://127.0.0.1:4777/api/data";
+const KEY = /[A-Z]+-\d+/;
+const CI = { SUCCESS: ["CI ✓", "done"], FAILURE: ["CI ✗", "blocked"], ERROR: ["CI ✗", "blocked"], PENDING: ["CI …", "working"], EXPECTED: ["CI …", "working"] };
+const REVIEW = { APPROVED: ["aprobada", "done"], CHANGES_REQUESTED: ["cambios", "blocked"], REVIEW_REQUIRED: ["review", "dim"] };
+function duration(ms) {
+  const m = Math.floor(ms / 60000);
+  if (m < 1) return "<1m";
+  if (m < 60) return `${m}m`;
+  const h = Math.floor(m / 60);
+  return h < 24 ? `${h}h` : `${Math.floor(h / 24)}d`;
+}
 
 // Where a space is now: its first terminal's live folder, else where it was made.
 // `ps`: panes(), read once by the caller (each read copies every pane).
@@ -51,7 +113,7 @@ async function both(a, b) {
 
 // What a stored color name looks like on an avatar (the same in every mod
 // that draws space avatars): one strong color per hue, light and dark alike.
-const MARK = { ansi6: "#22a99a", ansi3: "#e3814f", ansi4: "#5b8def", ansi5: "#8b7cf6", ansi2: "#3fae6a", ansi1: "#d9649a" };
+const MARK = { ansi6: "#2dffa0", ansi3: "#ffb02e", ansi4: "#9cc0e8", ansi5: "#c58bff", ansi2: "#a8d8a0", ansi1: "#ff5fcf" };
 
 // A space speaks up only when something in it needs you.
 export function glyph(status) {
@@ -87,6 +149,63 @@ export default class Spaces extends View {
       for (const state of Object.values(this.reconnecting)) state.busy = false;
     } catch { this.reconnecting = {}; }
     try { this.folded = new Set(JSON.parse(localStorage.getItem("machines.folded") ?? "[]")); } catch { this.folded = new Set(); }
+    // Each agent's last state and when it changed (ms), kept across restarts.
+    try { this.changed = JSON.parse(localStorage.getItem("changed") ?? "{}"); } catch { this.changed = {}; }
+    if (!this.changed || typeof this.changed !== "object" || Array.isArray(this.changed)) this.changed = {};
+    setShared("agents.desde", this.changed);
+    // Subagentes vivos por terminal (los escribe el hook oficina-subagent.sh): una sola lectura cada 5 s.
+    this.hooked = new Map();
+    if (!checking()) {
+      const poll = async (cx) => {
+        const r = await exec("sh", ["-c", 'find "$HOME/.local/state/oficina" -type f -mmin -30 -exec grep -H . {} + 2>/dev/null']);
+        const m = new Map();
+        for (const l of (r.stdout || "").split("\n")) {
+          const x = /oficina\/([^/]+)\/[^:]+:(.+)$/.exec(l);
+          if (x) m.set(x[1], [...(m.get(x[1]) ?? []), ROLES[x[2]] ? `${ROLES[x[2]]} · ${x[2]}` : x[2]]);
+        }
+        if (JSON.stringify([...m]) !== JSON.stringify([...this.hooked])) { this.hooked = m; cx.notify(); }
+      };
+      cx.spawn(poll);
+      cx.timer.every(5000, (cx) => cx.spawn(poll));
+    }
+    cx.timer.every(30000, (cx) => cx.notify());
+    // Puertos escuchando por space (ports.js), cada 5 s; si falla, no se pinta nada.
+    try {
+      this.ports = new PortScanner();
+      const scan = (cx) => cx.spawn(async (cx) => { try { if (await this.ports.scan().catch(() => false)) cx.notify(); } catch {} });
+      if (!checking()) cx.timer.every(5000, scan);
+    } catch { this.ports = null; }
+    // Datos del panel (PRs, CI, review, Jira) cada 120 s; los comparten los demás mods con shared("panel.data").
+    // Si el panel cae, se guarda null y no se pinta nada.
+    if (!checking()) {
+      const tick = (cx) => cx.spawn(async (cx) => {
+        let data = null;
+        try {
+          const r = await fetch(PANEL, { headers: { "x-panel": "1" } });
+          data = r.ok ? await r.json() : null;
+        } catch { data = null; }
+        setShared("panel.data", data);
+        // Aviso solo en la transición: CI rojo o cambios pedidos en una PR mía. La primera carga no avisa.
+        try {
+          const now = new Map((data?.prs ?? []).map((p) => [`${p.repo}#${p.number}`, p]));
+          if (this.prState && data) {
+            for (const [k, p] of now) {
+              const was = this.prState.get(k);
+              const red = (x) => x?.statusCheckRollup === "FAILURE" || x?.statusCheckRollup === "ERROR";
+              const ch = (x) => x?.reviewDecision === "CHANGES_REQUESTED";
+              if ((red(p) && !red(was)) || (ch(p) && !ch(was))) {
+                notify({ title: red(p) && !red(was) ? "CI rojo en tu PR" : "Cambios pedidos en tu PR", body: `#${p.number} ${p.title}`, level: "warning", action: undefined });
+                playSound("blocked");
+              }
+            }
+          }
+          if (data) this.prState = now;
+        } catch { /* sin aviso */ }
+        cx.notify();
+      });
+      tick(cx);
+      cx.timer.every(120000, tick);
+    }
     this.refreshMachines(cx);
     cx.timer.every(15000, cx => this.refreshMachines(cx));
     // Refresh only when the refs could have changed (see `due`).
@@ -338,10 +457,13 @@ export default class Spaces extends View {
   // The rows, under a header per machine once one isn't this computer.
   grouped(t, collapsed) {
     const rows = this.ordered();
-    const draw = (r) => (collapsed ? this.compact(r, t) : this.row(r, t));
+    const live = agents();
+    this.track(live, Date.now());
+    const draw = (r) => (collapsed ? this.compact(r, t) : v_flex().flex_none().child(this.row(r, t)).children(this.panelInfo(r, t)).children(this.portsLine(r.w, t)).children(this.agentRows(r.w, live, t)));
     // Where the active space's row lands among the children this returns: the list scrolls by its direct
     // children, and machine headers, login notes and loading rows count too.
     this.activeAt = -1;
+    this.used = 0; // alto de las filas dibujadas, para ajustar el bloque
     let before = 0;
     const remote = [...new Set([...rows.map(r => r.w.machine).filter(Boolean), ...this.machines.map(m => m.name), ...Object.keys(this.reconnecting)])].sort();
     const loading = m => {
@@ -349,7 +471,7 @@ export default class Spaces extends View {
       return layout === "loading" || (!layout && this.machines.some(k => k.name === m && k.state === "connected"))
         || spaces().some(s => (s.machine ?? null) === m && !this.shown.has(s.id));
     };
-    const loadingRow = m => h_flex().id(`machine-loading-${m ?? "local"}`).h(28).flex_none().px(collapsed ? 0 : 8).items_center().when(collapsed, el => el.justify_center()).text_size(12).text_color(t.dim).child(collapsed ? "…" : "Loading…");
+    const loadingRow = m => h_flex().id(`machine-loading-${m ?? "local"}`).h(28).flex_none().px(collapsed ? 0 : 8).items_center().when(collapsed, el => el.justify_center()).text_size(13.5).text_color(t.dim).child(collapsed ? "…" : "Loading…");
     if (!remote.length) {
       if (loading(null) && !rows.length) return [loadingRow(null)];
       this.activeAt = rows.findIndex(r => r.w.active);
@@ -366,7 +488,7 @@ export default class Spaces extends View {
       const folded = this.folded.has(m);
       const icon = svg(`mods/workspace-chrome/${m ? "server" : "monitor"}.svg`).size(13).flex_none();
       const badge = div().absolute().right(-3).bottom(-2).size(6).rounded(3).border_1().border_color(t.chrome).bg(connected ? t.ansi2 : t.dim);
-      const head = h_flex().id(`machine-${m ?? "local"}`).h(26).flex_none().px(collapsed ? 0 : 8).gap(7).items_center().text_size(11).text_color(t.dim)
+      const head = h_flex().id(`machine-${m ?? "local"}`).h(26).flex_none().px(collapsed ? 0 : 8).gap(7).items_center().text_size(12.5).text_color(t.dim)
         .when(collapsed, el => el.mt(4).w(RAIL_CELL).justify_center().rounded(6).tooltip(login ? `${m} needs a login: run ${login}. Click for Copy.` : m ? `${m} · ${connected ? "connected" : (machine?.state ?? "asleep").replace(/_/g, " ")}` : "This computer"))
         .cursor_pointer().hover(s => s.bg(t.hover))
         .on_click((_e, cx) => {
@@ -394,7 +516,7 @@ export default class Spaces extends View {
           .child(div().size(6).rounded(3).flex_none().bg(connected ? t.ansi2 : t.dim))
           .child(svg(`mods/workspace-chrome/chevron-${folded ? "right" : "down"}.svg`).size(11).flex_none()));
       const empty = h_flex().id(`machine-new-${m ?? "local"}`).h(28).flex_none().px(collapsed ? 0 : 8).gap(7).items_center().rounded(7)
-        .text_size(12).text_color(t.dim).hover(s => s.bg(t.hover).text_color(t.foreground))
+        .text_size(13.5).text_color(t.dim).hover(s => s.bg(t.hover).text_color(t.foreground))
         .on_click(() => run("space.new", { machine: m ?? "" }))
         .when(collapsed, el => el.w(RAIL_CELL).rounded(6).justify_center().tooltip(`New space on ${m ?? "this computer"}`)
           .child(h_flex().size(18).rounded(5).border_1().border_color(t.dim).items_center().justify_center()
@@ -403,11 +525,11 @@ export default class Spaces extends View {
       if (!collapsed && rebuilt) { before += 1; return [head]; }
       const cell = collapsed ? railCell : (el) => el;
       const guidance = !collapsed && login ? [v_flex().px(8).pb(6).gap(3).flex_none()
-        .child(div().text_size(11).text_color(t.blocked).child("needs a login: run"))
+        .child(div().text_size(12.5).text_color(t.blocked).child("needs a login: run"))
         .child(h_flex().gap(5).items_center()
-          .child(div().flex_1().min_w(0).truncate().tooltip(login).text_size(11).text_color(t.muted).child(login))
+          .child(div().flex_1().min_w(0).truncate().tooltip(login).text_size(12.5).text_color(t.muted).child(login))
           .child(div().id(`machine-login-copy-${m}`).flex_none().px(5).py(2).rounded(4)
-            .text_size(11).text_color(t.foreground).bg(t.raised).cursor_pointer().hover(s => s.bg(t.hover))
+            .text_size(12.5).text_color(t.foreground).bg(t.raised).cursor_pointer().hover(s => s.bg(t.hover))
             .on_click((_e, cx) => { cx.stop_propagation(); cx.write_to_clipboard(login); this.copiedLogin = login; cx.notify(); })
             .child(this.copiedLogin === login ? "Copied" : "Copy")))] : [];
       const items = [cell(head), ...guidance, ...(folded ? [] : mine.length ? mine.map(draw) : [loading(m) ? loadingRow(m) : cell(empty)])];
@@ -416,6 +538,101 @@ export default class Spaces extends View {
       before += items.length;
       return items;
     });
+  }
+
+  // Stamps agents whose state changed. Done and idle count as one.
+  track(list, now) {
+    let dirty = false;
+    for (const a of list) {
+      const s = a.status === "done" ? "idle" : a.status;
+      if (this.changed[a.address]?.s === s) continue;
+      this.changed[a.address] = { s, at: now };
+      dirty = true;
+    }
+    if (!dirty) return;
+    const listed = new Set(list.map((a) => a.address));
+    for (const [k, c] of Object.entries(this.changed)) if (!listed.has(k) && now - c.at > 30 * 86400000) delete this.changed[k];
+    localStorage.setItem("changed", JSON.stringify(this.changed));
+    setShared("agents.desde", this.changed); // mi-tabs lo lee para el tiempo trabajando
+  }
+
+  // #PR, CI, review, open threads and Jira status for the space's ticket key. Never throws: no data, nothing drawn.
+  panelInfo(r, t) {
+    try {
+      const data = shared("panel.data");
+      if (!data) return [];
+      const key = (KEY.exec(r.w.name) ?? KEY.exec(r.g?.branch ?? ""))?.[0];
+      if (!key) return [];
+      const pr = (data.prs ?? []).find((p) => p.key === key || KEY.exec(p.branch ?? "")?.[0] === key);
+      const jira = (data.jira ?? []).find((j) => j.key === key);
+      if (!pr && !jira) return [];
+      const bit = (txt, tone) => div().flex_none().text_color(tone === "dim" ? t.dim : t[tone]).child(txt);
+      const row = h_flex().h(20).flex_none().pl(34).pr(8).gap(8).items_center().text_size(12).text_color(t.dim).overflow_hidden();
+      if (pr) {
+        row.child(div().id(`pr-${r.w.id}`).flex_none().text_color(t.accent).cursor_pointer().hover((s) => s.text_color(t.foreground))
+          .on_click((_e, cx) => { cx.stop_propagation(); cx.open_url(pr.url); }).child(`#${pr.number}`));
+        const ci = CI[pr.statusCheckRollup];
+        if (ci) row.child(bit(ci[0], ci[1]));
+        const rv = REVIEW[pr.reviewDecision];
+        if (rv) row.child(bit(rv[0], rv[1]));
+        if (pr.open?.length) row.child(bit(`${pr.open.length} hilo${pr.open.length > 1 ? "s" : ""}`, "working"));
+      }
+      if (jira?.status) row.child(div().flex_1().min_w(0).truncate().text_right().child(jira.status));
+      this.used += 20;
+      return [row];
+    } catch { return []; }
+  }
+
+  // Una línea tenue con los puertos del space (:3000 :5173, máx. 4 y "+N"); clic abre, clic derecho para el forward.
+  portsLine(w, t) {
+    try {
+      const all = this.ports?.bySpace?.[w.id] ?? [];
+      if (!all.length) return [];
+      const machine = w.machine ?? null;
+      const target = this.machines.find((m) => m.name === machine)?.target;
+      const live = forwards();
+      const chip = (port) => {
+        const f = machine ? live[`${machine}:${port}`] : null;
+        return div().id(`port-${w.id}-${port}`).flex_none().rounded(4).px(2).text_color(f ? t.accent : t.dim)
+          .hover((s) => s.bg(t.hover).text_color(t.foreground))
+          .tooltip(machine ? (f ? `Forwarded to localhost:${f.local}` : `Forward ${machine}:${port} and open`) : `Open localhost:${port}`)
+          .on_mouse_down("left", (_e, cx) => cx.stop_propagation())
+          .on_mouse_up("left", (_e, cx) => { cx.stop_propagation(); cx.spawn(async (cx) => { await openPort(machine, port, target); cx.notify(); }); })
+          .on_mouse_down("right", (_e, cx) => { cx.stop_propagation(); if (f) cx.spawn(async (cx) => { await stopForward(machine, port); cx.notify(); }); })
+          .child(`:${port}`);
+      };
+      const row = h_flex().h(18).flex_none().pl(34).pr(8).gap(4).items_center().text_size(11.5).text_color(t.dim).overflow_hidden()
+        .children(all.slice(0, 4).map(chip));
+      if (all.length > 4) row.child(div().flex_none().child(`+${all.length - 4}`));
+      this.used += 18;
+      return [row];
+    } catch { return []; }
+  }
+
+  // One sub-row per agent of the space (name, time, state dot), plus its live sub-agents.
+  agentRows(w, live, t) {
+    const now = Date.now();
+    const out = [];
+    for (const a of live.filter((x) => x.space === w.id)) {
+      this.used += AGENT_ROW;
+      const col = a.status === "blocked" ? "#ff5577" : a.status === "working" ? t.working : a.status === "done" ? t.done : t.dim;
+      const when = this.changed[a.address]?.at;
+      out.push(h_flex().id(`ag-${a.address}`).h(AGENT_ROW).flex_none().pl(34).pr(8).gap(8).items_center().rounded(6).text_size(14)
+        .when(a.focused, (el) => el.bg(t.raised))
+        .hover((s) => s.bg(t.hover))
+        .on_click(() => run("pane.focus", { pane: a.pane }))
+        .child(statusMark(a))
+        .child(agentIcon(a, clean(a.title) || a.tab_name || "", a.status === "blocked" ? "#ff5577" : "#c58bff"))
+        .child(div().flex_1().min_w(0).truncate().text_color(a.status === "blocked" ? "#ff5577" : a.focused ? t.foreground : t.muted).child(clean(a.title) || a.tab_name || a.program?.name || a.address))
+        .when(Boolean(when), (el) => el.child(div().flex_none().text_size(13).text_color(t.dim).child(duration(now - when)))));
+      for (const [j, n] of (this.hooked.get(a.address) ?? []).entries()) {
+        this.used += AGENT_ROW;
+        out.push(h_flex().id(`hk-${a.address}-${j}`).h(AGENT_ROW).flex_none().pl(48).gap(6).items_center().text_size(13).text_color(t.working)
+          .child(botHead(SUBBOT[n.split(" · ").pop()] ?? 4))
+          .child(div().truncate().child(n)));
+      }
+    }
+    return out;
   }
 
   // Only what's unusual, after the name: "herdr \u00b7 spike \u21912 \u21931". The repo or
@@ -434,7 +651,7 @@ export default class Spaces extends View {
       .gap(5)
       .justify_end()
       .items_center()
-      .text_size(11.5)
+      .text_size(14)
       .text_color(t.dim)
       .when(Boolean(where), (el) => el.child(div().min_w(0).truncate().child(where)))
       .when(g.ahead > 0, (el) => el.child(div().flex_none().text_color(t.ansi2).child(`\u2191${g.ahead}`)))
@@ -442,6 +659,7 @@ export default class Spaces extends View {
   }
 
   row({ w, i, g, tree }, t) {
+    this.used += rowHeight({ tree });
     const on = w.active;
     const fromIndex = this.pressed === null ? -1 : spaces().findIndex(s => s.id === this.pressed);
     const colors = shared("space.colors") ?? {};
@@ -455,6 +673,7 @@ export default class Spaces extends View {
       .flex_none()
       .justify_center()
       .rounded(8)
+      .when(/^me(\s*·|$)/i.test(w.name) && !on, (el) => el.bg("#f0a0c80f"))
       .when(on, (el) => el.bg(t.selected))
       .when(!on, (el) => el.hover((s) => s.bg(t.hover)))
       .when(this.pressed === w.id && this.over !== w.id, (el) => el.opacity(0.5))
@@ -492,8 +711,8 @@ export default class Spaces extends View {
           .gap(9)
           .items_center()
           .when(Boolean(tree), el => el.pl(22).child(svg("mods/workspace-chrome/branch.svg").size(13).flex_none().text_color(t.dim)))
-          .when(!tree, el => el.child(h_flex().size(18).flex_none().rounded(5).bg(fill).items_center().justify_center().text_size(10.5).font_bold().text_color("#ffffff").child([...w.name][0]?.toUpperCase() ?? "?")))
-          .child(div().flex_initial().min_w(SIDE_MIN).truncate().text_color(t.foreground).child(w.name))
+          .when(!tree, el => el.child(h_flex().size(18).flex_none().rounded(9).bg(fill).items_center().justify_center().text_size(12).font_bold().text_color("#1b1d2b").child([...w.name][0]?.toUpperCase() ?? "?")))
+          .child(div().flex_initial().min_w(SIDE_MIN).truncate().font_medium().text_color(t.foreground).child(w.name))
           .child(g ? this.gitTail(g, tree, w.name, t) : div().flex_1()),
       );
   }
@@ -530,6 +749,12 @@ export default class Spaces extends View {
     }
     if (changed) setShared("space.colors", kept);
     const list = this.grouped(t, collapsed);
+    // Alto según contenido: cabecera 31 + filas + cabeceras de máquina + pb 14; el sobrante queda abajo.
+    if (!collapsed) {
+      const want = Math.min(700, Math.max(90, Math.ceil(31 + 14 + this.used)));
+      const cur = find(layout(), "spaces")?.size?.px;
+      if (cur !== undefined && Math.abs(cur - want) > 1) run("layout.resize", { id: "spaces", px: want });
+    }
     // Bring the active space into view when it, or its place in the list, changes; a row already in view stays put.
     const active = sp.find(p => p.active)?.id;
     if (active !== this.revealed || this.activeAt !== this.revealedAt) {
@@ -537,16 +762,18 @@ export default class Spaces extends View {
       this.revealedAt = this.activeAt;
       if (this.activeAt >= 0) this.scroll.scroll_to_item(this.activeAt);
     }
-    return v_flex().size_full().min_h(0).bg(t.chrome).text_size(13)
-      .child(h_flex().h(31).pl(16).pr(10).items_center().justify_between().text_size(11.5).text_color(t.dim)
+    return v_flex().size_full().min_h(0).bg(t.chrome).text_size(14.5)
+      .child(h_flex().h(31).pl(16).pr(10).items_center().justify_between().text_size(13).text_color("#d9a6ff")
         .when(collapsed, el => el.pl(0).pr(0).justify_center())
-        .when(!collapsed, el => el.child("Spaces"))
+        .when(!collapsed, el => el.child(svg("mods/workspace-chrome/monitor.svg").size(15).flex_none().text_color(theme().muted)))
         .child(div().id("space-new").size(26).flex_none().flex().items_center().justify_center().rounded(6).hover(s => s.bg(t.hover).text_color(t.foreground))
           .on_click(() => run("space.new")).child(svg("mods/workspace-chrome/plus.svg").size(14))))
       .child(v_flex().flex_1().min_h(0).px(collapsed ? 0 : 8).pb(14).overflow_y_scrollbar().mode("always").track_scroll(this.scroll)
         // A block above (another mod's) growing, or the window resizing, shrinks this list and can push the active space out.
         .on_size_change((_size, cx) => { if (this.activeAt >= 0) { this.scroll.scroll_to_item(this.activeAt); cx.notify(); } })
         .on_mouse_up("left", (_e, cx) => { this.pressed = null; cx.notify(); })
-        .children(list));
+        .children(list))
+      .when(collapsed, (el) => el.child(h_flex().h(28).flex_none().items_center().justify_center()
+        .child(div().id("collapse").text_size(14.5).text_color(t.dim).hover((s) => s.text_color(t.foreground)).on_click(toggleSidebar).child("»"))));
   }
 }
