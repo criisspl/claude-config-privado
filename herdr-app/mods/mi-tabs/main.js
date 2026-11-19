@@ -1,10 +1,10 @@
 import { View, div, svg, image } from "gpui-kit";
 import { h_flex, ScrollHandle } from "gpui-base";
-import { spaces, panes, agents, run, openOverlay, theme, window, shared, layout, settings, exec, home } from "herdr";
+import { spaces, panes, agents, run, openOverlay, theme, window, shared, layout, settings, exec, home, setBadge } from "herdr";
 
 // Cuenta personal: cw nombra el space «me · …». Mismo acento que mi-agents y mi-pendientes.
 const PERSONAL = "#f0a0c8";
-const esPersonal = (n) => /^me\s*·\s*/i.test(n ?? "");
+const esPersonal = (n) => /^me(\s*·|$)/i.test(n ?? "");
 const dur = (ms) => { const m = Math.floor(ms / 60000); return m < 1 ? "<1m" : m < 60 ? `${m}m` : m < 1440 ? `${Math.floor(m / 60)}h` : `${Math.floor(m / 1440)}d`; };
 
 function find(node, id) {
@@ -119,7 +119,7 @@ export default class Tabs extends View {
       const chip = rama ? (rama.ticket ?? rama.rama) : null;
       const ag = c.status === "working" || c.status === "blocked" ? ags.find((a) => a.tab === c.id) : null;
       const hace = ag && desde[ag.address]?.at ? dur(Date.now() - desde[ag.address].at) : null;
-      return h_flex().id(`tab-${c.id}`).h(29).px(10).gap(7).rounded(7).items_center().flex_none().text_size(12.8)
+      return h_flex().id(`tab-${c.id}`).relative().h(29).px(10).gap(7).rounded(7).items_center().flex_none().text_size(13.5)
         // A rename or status dot on this or an earlier tab can push the active one out.
         .when(i <= active, el => el.on_size_change((_size, cx) => { this.scroll.scroll_to_item(active); cx.notify(); }))
         .border(1).border_color(c.active ? (personal ? PERSONAL : t.border) : t.chrome).bg(c.active ? t.raised : t.chrome).text_color(c.active ? t.foreground : t.muted)
@@ -135,9 +135,10 @@ export default class Tabs extends View {
         .child(div().max_w(170).truncate().child(c.zoomed ? `${name} Z` : name))
         .when(Boolean(chip), el => el.child(div().max_w(96).truncate().text_size(11).text_color(t.dim).tooltip(rama.rama).child(chip)))
         .when(Boolean(hace), el => el.child(div().text_size(11).text_color(t.dim).child(hace)))
-        .when(c.status === "working", el => el.child(svg("mods/workspace-chrome/spinner.svg").size(12).flex_none().text_color(t.working).spin(900)))
-        .when(c.status === "blocked" || c.status === "done", el => el.child(div().size(6).rounded(3).bg(t[c.status])))
-        .when(c.active, el => el.child(div().id(`close-${c.id}`).text_color(t.dim).on_mouse_down("left", stop).on_click((_e, cx) => { cx.stop_propagation(); run("tab.close", { id: c.id }); }).child(svg("mods/pane/close.svg").size(12))));
+        .when(c.status === "working", el => el.child(div().size(6).rounded(3).flex_none().bg("#ffb02e").loop("opacity", { from: 0.3, to: 1, period: 900, easing: "linear" })))
+        .when(c.status === "blocked" || c.status === "done", el => el.child(div().size(5).rounded(3).flex_none().bg(c.status === "done" ? "#2dffa0" : "#ff5fcf")))
+        .when(c.active, el => el.child(div().id(`close-${c.id}`).text_color(t.dim).on_mouse_down("left", stop).on_click((_e, cx) => { cx.stop_propagation(); run("tab.close", { id: c.id }); }).child(svg("mods/pane/close.svg").size(12))))
+        .when(c.active, el => el.child(div().absolute().left(0).right(0).bottom(0).h(2).bg("#c58bff")));
     };
     const root = layout(), sidebar = find(root, "sidebar"), w = window();
     // Old saved rails and a dragged-narrow sidebar can be smaller than the window buttons.
@@ -150,13 +151,18 @@ export default class Tabs extends View {
     const panelButton = (id, label, icon) => {
       const on = panel && !panel.hidden && body?.active === id;
       return h_flex().id(`panel-${id}`).h(26).px(8).gap(5).flex_none().items_center().rounded(6)
-        .text_size(12).bg(on ? t.selected : t.chrome).text_color(on ? t.foreground : t.muted)
+        .text_size(13).bg(on ? t.selected : t.chrome).text_color(on ? t.foreground : t.muted)
         .hover(s => s.bg(t.hover)).on_mouse_down("left", stop)
         .on_click(() => {
           if (on) run("layout.hide", { id: "panel" });
           else { run("layout.select", { stack: "panel-body", child: id }); run("layout.show", { id: "panel" }); }
         }).child(svg(icon).size(14)).child(label);
     };
+    // "⚠ N bloqueado(s)": agentes en blocked de cualquier space; el clic salta al primero. Badge del icono con N.
+    let blocked = [];
+    try { blocked = agents().filter((a) => a.status === "blocked"); } catch { blocked = []; }
+    const badge = blocked.length ? String(blocked.length) : null;
+    if (badge !== this.badge) { this.badge = badge; try { setBadge(badge); } catch { /* sin badge */ } }
     return h_flex().size_full().min_w(0).px(10).pl(lightsPadding).gap(3).items_center().bg(t.chrome).border_b(1).border_color(t.border)
       .on_mouse_up("left", () => { this.pressed = null; })
       .on_scroll_wheel(e => this.wheel(e))
@@ -164,6 +170,10 @@ export default class Tabs extends View {
       .child(h_flex().id("tab-scroll").flex_1().min_w(0).h_full().items_center().gap(3).overflow_x_scrollbar().track_scroll(this.scroll)
         .on_size_change((_size, cx) => { if (active >= 0) { this.scroll.scroll_to_item(active); cx.notify(); } })
         .children(shown.map(item)))
+      .when(blocked.length > 0, el => el.child(div().id("blocked").h(26).px(8).flex_none().flex().items_center().rounded(6).text_size(13).bg(t.blocked + "26").text_color(t.blocked)
+        .hover(s => s.bg(t.blocked + "40")).on_mouse_down("left", stop)
+        .on_click(() => { const a = blocked[0]; run("space.select", { id: a.space }); run("pane.focus", { pane: a.pane }); })
+        .child(`⚠ ${blocked.length} ${blocked.length === 1 ? "bloqueado" : "bloqueados"}`)))
       .child(button("tab-new", "+", () => openOverlay({ mod: "new-menu", kind: "popup", width: 250, height: 512 })))
       .when(enabled.includes("files"), el => el.child(panelButton("files", "Files", "mods/files/file.svg")))
       .when(enabled.includes("changes"), el => el.child(panelButton("changes", "Changes", "mods/changes/changes.svg")))
