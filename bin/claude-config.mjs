@@ -15,6 +15,7 @@ const AYUDA = `Uso: claude-config <comando> [opciones]
   update              Baja la última versión publicada, actualiza lo global (~/.claude)
                       y, dentro de un proyecto, sus paquetes
   status              Versión instalada, paquetes, ficheros modificados y paquetes sugeridos
+  check               Para CI: sale 1 si hay ficheros editados a mano o el proyecto va por detrás de la librería
   list                Paquetes disponibles (✓ instalado, · detectado)
   version             Versión de la librería
 
@@ -120,6 +121,19 @@ try {
       if (mod.length) console.log(`Modificados a mano: ${mod.join(", ")}`);
       const sugeridos = detectar(proyecto, cat).filter((p) => !lock.paquetes.includes(p));
       if (sugeridos.length) console.log(`Detectados y sin instalar: ${sugeridos.join(", ")}`);
+      break;
+    }
+    case "check": {
+      const lock = leerLock(proyecto) ?? sinLock();
+      const problemas = modificados(proyecto).map((f) => `modificado a mano: ${f}`);
+      if (lock.version !== version(LIB)) problemas.push(`el proyecto está en v${lock.version} y la librería en v${version(LIB)} (claude-config aplicar)`);
+      const sugeridos = detectar(proyecto, cat).filter((p) => !lock.paquetes.includes(p));
+      if (sugeridos.length) console.log(`  Aviso: detectados y sin instalar: ${sugeridos.join(", ")} (claude-config add ...)`);
+      if (problemas.length) {
+        console.error(problemas.map((p) => `✗ ${p}`).join("\n"));
+        process.exit(1);
+      }
+      console.log("✓ claude-config al día");
       break;
     }
     case "list": {
