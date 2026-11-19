@@ -6,6 +6,13 @@ Cada versión publicada tiene su sección `## X.Y.Z`. Al subir `VERSION` en `mai
 - **Menor** (1.1.0): paquetes o skills nuevos, reglas nuevas.
 - **Parche** (1.0.1): correcciones de texto o de errores.
 
+## 1.7.0
+
+- Seguridad: `rm-safety` con el regex de ai-development-rules (`/bin/rm`, `\rm`, `$HOME/*`, sin falsos positivos SQL con `-m/--body`); `git-safety` bloquea borrar `main`, `master` y `develop` en remoto; `no-secret-leak` lee sus patrones de `hooks/lib/secret-patterns`; `opus-watch` lee el modelo con jq y cae a grep.
+- Agentes: `implementador` (Edit para cambios puntuales, sin commit ni PR sin que lo pidan) y `buscador` (Bash solo de lectura).
+- herdr-app: panel lateral con pestañas Avisos e Issues con contador, visor SQL `mi-db`, y mod `mis-avisos`. `/auditar` avisa cuando hay vulnerabilidades críticas o altas.
+- Regla de «mis issues» personales en `CLAUDE.md`.
+
 ## 1.6.0
 
 - Plugins: `.claude-plugin/marketplace.json` con `guardas` (hooks) y `flujo` (agentes y skills), para instalar con `/plugin install` sin clonar (ver `docs/plugins.md`).
