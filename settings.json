@@ -1,6 +1,10 @@
 {
   "model": "opusplan",
+  "env": {
+    "CLAUDE_CODE_SUBAGENT_EFFORT": "medium"
+  },
   "permissions": {
+    "blockWritesOutsideWorkingDirectories": true,
     "allow": [
       "mcp__codegraph__*",
       "Bash(git status *)",

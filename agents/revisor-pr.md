@@ -2,6 +2,7 @@
 name: revisor-pr
 description: Revisa los cambios de una PR o rama y devuelve solo hallazgos (bugs, seguridad, regresiones, tests que faltan). No modifica código ni publica comentarios.
 model: sonnet
+effort: medium
 maxTurns: 30
 tools: Read, Grep, Glob, Bash(gh pr diff:*), Bash(gh pr view:*), Bash(git diff:*), Bash(git log:*)
 ---
