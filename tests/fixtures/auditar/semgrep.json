@@ -1,0 +1,9 @@
+{
+  "results": [
+    {"check_id": "javascript.react.security.audit.react-dangerouslysetinnerhtml", "path": "src/App.jsx", "start": {"line": 12, "col": 5},
+     "extra": {"severity": "ERROR", "message": "Usar dangerouslySetInnerHTML con datos sin sanear permite XSS.\nMás detalle.", "metadata": {"references": ["https://react.dev/reference/react-dom/components/common#dangerously-setting-the-inner-html"]}}},
+    {"check_id": "javascript.lang.security.detect-eval", "path": "src/util.js", "start": {"line": 3, "col": 1},
+     "extra": {"severity": "WARNING", "message": "eval() es peligroso.", "metadata": {}}}
+  ],
+  "errors": []
+}
