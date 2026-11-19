@@ -53,7 +53,7 @@ if echo "$bare" | grep -qP "${G}restore\\s+(-\\S+\\s+)*(--\\s+)?\\.(\\s|\$|[;&|]
 fi
 
 # Block force clean
-if echo "$command" | grep -qP "${G}clean\\s+.*-f"; then
+if echo "$command" | grep -qP "${G}clean\\s+(.*\\s)?(-[a-zA-Z]*f|--force)"; then
   echo "Blocked: git clean -f is not allowed" >&2
   exit 2
 fi
