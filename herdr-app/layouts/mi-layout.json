@@ -240,6 +240,19 @@
               }
             },
             {
+              "id": "db",
+              "type": "block",
+              "content": {
+                "mod": "mi-db",
+                "props": {
+                  "barra": true
+                }
+              },
+              "size": {
+                "px": 4
+              }
+            },
+            {
               "id": "live-ports",
               "type": "block",
               "content": {
