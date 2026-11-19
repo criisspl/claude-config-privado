@@ -8,7 +8,7 @@ set -uo pipefail
 input=$(cat)
 cwd=""
 command -v jq >/dev/null 2>&1 && cwd=$(echo "$input" | jq -r '.cwd // ""')
-[[ -n "$cwd" ]] && cd "$cwd" 2>/dev/null
+[[ -n "$cwd" ]] && { cd "$cwd" 2>/dev/null || true; }
 
 command -v gh >/dev/null 2>&1 || exit 0
 url=$(git remote get-url origin 2>/dev/null) || exit 0
