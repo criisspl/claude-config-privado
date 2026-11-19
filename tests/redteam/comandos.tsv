@@ -174,3 +174,13 @@ rm-safety.sh	allow	cat rm-rf.txt
 rm-safety.sh	allow	npm run clean
 rm-safety.sh	allow	liquibase update
 rm-safety.sh	allow	git rm -r --cached dist
+rm-safety.sh	block	rm -rf "/"
+rm-safety.sh	block	rm -rf '/'
+rm-safety.sh	block	rm -rf "~"
+rm-safety.sh	block	rm -rf /usr
+rm-safety.sh	block	rm -rf /etc/
+rm-safety.sh	block	rm -rf /Users
+rm-safety.sh	block	sudo rm -rf /var
+rm-safety.sh	allow	rm -rf /usr/local/tmp/build
+rm-safety.sh	allow	rm -rf "dist"
+rm-safety.sh	allow	rm -rf /var/folders/xx/tmp123
