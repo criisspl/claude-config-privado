@@ -23,6 +23,7 @@
   - Sonnet → agente `implementador`: escribir código con un plan ya acordado.
   - Haiku → agente `mecanico`: tareas mecánicas, resúmenes, buscar datos.
   - Haiku → agente `buscador`: localizar código (solo lectura).
+  - Opus → agente `planificador`: planificar, depurar cosas raras o revisar PRs críticas; devuelve solo el plan o el diagnóstico. Usarlo cuando la tarea lo pida, sin preguntar antes.
   - Opus → agente `experto`: si el hilo va en Sonnet y surge un bug raro, un error que no sale a la primera o una revisión crítica.
 - Solo los agentes necesarios, el mínimo; nunca todos por defecto. Si la tarea toca varios repos, un agente por rol con todas las rutas y un único resumen compartido, no uno por proyecto.
 - Sonnet → agente `revisor-pr`: revisar una PR o rama (solo lectura, devuelve solo hallazgos).
@@ -32,7 +33,3 @@
 - Para entender o localizar código, CodeGraph primero (si hay `.codegraph/`); leer ficheros grandes con `offset`/`limit` y no releer lo ya leído.
 
 @RTK.md
-
-# Mis issues personales
-
-"Mis issues" = pendientes personales de Cristina en el mod `mi-issues` de herdr-app (`~/.config/herdr-app/pendientes.json`). No son tickets de Jira. Si dice «apunta en mis issues» o «qué tengo en mis issues», leer o editar ese fichero; no crear ni consultar Jira.

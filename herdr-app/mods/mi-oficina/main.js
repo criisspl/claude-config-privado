@@ -7,7 +7,7 @@ import { theme, agents, terminals, panes, run, exec } from "herdr";
 const D = "mods/mi-oficina/";
 const MAZE = "#2121de";
 const GHOSTS = ["PO", "UX", "Senior", "QA", "TechLead"]; // sprites de reserva, por orden
-const AGENTS = { mecanico: "PO", buscador: "UX", implementador: "Senior", "revisor-pr": "QA", planificador: "TechLead" }; // agente -> sprite
+const AGENTS = { mecanico: "PO", visual: "UX", implementador: "Senior", "revisor-pr": "QA", planificador: "TechLead" }; // agente -> sprite
 const ghostOf = (k, i) => AGENTS[Object.keys(AGENTS).find(n => (k.title || "").toLowerCase().includes(n))] || GHOSTS[i % GHOSTS.length];
 const S = 34; // tamaño sprite
 const CELL = 84; // ancho de celda

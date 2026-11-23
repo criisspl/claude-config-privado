@@ -4,7 +4,7 @@ Se usa el modelo más barato que dé la calidad suficiente para cada tarea. Subi
 
 | Tarea | Modelo | Cómo |
 | --- | --- | --- |
-| Planificar, decidir enfoque, depurar algo raro, revisar un cambio crítico | Opus | agente `experto`, o plan mode con `opusplan` |
+| Planificar, decidir enfoque, depurar algo raro, revisar un cambio crítico | Opus | agente `planificador` (solo plan o diagnóstico), `experto` (si hay que actuar), o plan mode con `opusplan` |
 | Escribir código con un plan ya acordado | Sonnet | agente `implementador` |
 | Mecánico: mover datos, resumir, renombrar, buscar un dato | Haiku | agente `mecanico` |
 | Localizar código (solo lectura) | Haiku | agente `buscador` |
@@ -12,7 +12,7 @@ Se usa el modelo más barato que dé la calidad suficiente para cada tarea. Subi
 ## Reglas
 
 - Valor por defecto: `opusplan` (Opus planifica, Sonnet ejecuta).
-- **Antes de usar Opus se pregunta a la persona y se espera el ok.** Es el modelo caro.
+- `planificador` se usa cuando la tarea lo pide, sin preguntar antes; para el resto de usos de Opus se pregunta y se espera el ok.
 - Cada respuesta empieza con una línea `Modelo: X`; si se lanza un agente, se añade cuál y con qué modelo. Así siempre se ve qué corre y cuánto cuesta.
 - Los subagentes sin modelo explícito van en Haiku (`CLAUDE_CODE_SUBAGENT_MODEL=haiku`).
 - Tareas repetitivas (boilerplate, renombrados, docs): `/effort low`.
