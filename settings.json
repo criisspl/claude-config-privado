@@ -111,6 +111,11 @@
           {
             "type": "command",
             "command": "\"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/ctx-guard.sh\""
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/skill-router.sh\"",
+            "timeout": 10
           }
         ]
       }

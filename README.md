@@ -55,6 +55,7 @@ Cómo trabajar con IA: pocas reglas, cada una en su nota.
 - [`ahorro-de-tokens`](rules/ahorro-de-tokens.md): contexto pequeño, leer poco, delegar.
 - [`verificar-antes-de-hecho`](rules/verificar-antes-de-hecho.md): lint, tipos, tests, build y UI.
 - [`worktrees-y-ramas`](rules/worktrees-y-ramas.md): una rama por cambio y limpieza al terminar.
+- [`oficina`](rules/oficina.md): roles, agente y skills; lo sugiere el hook `skill-router`.
 - [`una-peticion-por-turno`](rules/una-peticion-por-turno.md), [`explicaciones-claras`](rules/explicaciones-claras.md), [`modelo-visible`](rules/modelo-visible.md).
 - [`hooks-de-contexto`](rules/hooks-de-contexto.md) (`ctx-guard`, `compact-reinject`) y [`capturas-en-subagente`](rules/capturas-en-subagente.md) (`no-screenshot-main`).
 

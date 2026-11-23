@@ -6,6 +6,12 @@ Cada versión publicada tiene su sección `## X.Y.Z`. Al subir `VERSION` en `mai
 - **Menor** (1.1.0): paquetes o skills nuevos, reglas nuevas.
 - **Parche** (1.0.1): correcciones de texto o de errores.
 
+## 1.10.0
+
+- Agente `planificador` (Opus): plan o diagnóstico, sin código. Se usa sin preguntar antes.
+- Hook `skill-router` (`UserPromptSubmit`): con grep, sin LLM, sugiere skill y agente según el prompt (máx. 2 líneas); las skills manuales solo se proponen. Regla `oficina`.
+- `CLAUDE.md` genérico: sin la sección personal de «Mis issues». Mapa de mi-oficina: `visual` = UX, `planificador` = Tech Lead.
+
 ## 1.9.1
 
 - `add` y `remove`: si el proyecto iba por detrás de la librería, enseñan las novedades desde su versión (antes lo movían a la versión nueva sin decirlo). `aplicar` y `update` no cambian.
